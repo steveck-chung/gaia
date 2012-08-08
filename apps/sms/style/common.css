@@ -173,6 +173,31 @@
   position: relative;
 }
 
+.view-header .tag-container {
+  background: transparent;
+  position: relative;
+  margin: 1rem 3rem;
+  top: -8.5rem;
+  height: calc(100% - 2rem); 
+  width: calc(100% - 8rem);
+  pointer-events: none;
+}
+
+.tag-container .receiver-tag {
+  background: purple;
+  height: -moz-calc(100% - 0.7rem);
+  float: left;
+  margin: 1rem;
+  border-radius: 0.3rem;
+  font: 2.2rem/2.2rem 'Open Sans',Sans-serif;
+  margin: 0.2rem 0.1rem;
+  padding: 0.1rem 0.3rem 0.1rem 0.2rem;
+}
+
+.tag-container .receiver-tag:first-child {
+  margin: 0.2rem 0.1rem 0.2rem 0.4rem;
+}
+
 .view-header .icon.icon-add {
   background-image: url(images/icons/add.png);
 }

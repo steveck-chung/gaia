@@ -573,8 +573,13 @@ var ThreadUI = {
   },
 
   get editHeader() {
-      delete this.editHeader;
-      return this.editHeader = document.getElementById('messages-edit-title');
+    delete this.editHeader;
+    return this.editHeader = document.getElementById('messages-edit-title');
+  },
+
+  get tagContainer() {
+    delete this.tagContainer;
+    return this.tagContainer = document.getElementById('tag-container');
   },
 
   init: function thui_init() {
@@ -593,7 +598,7 @@ var ThreadUI = {
     this.deleteSelectedButton.addEventListener('click',
       this.deleteMessages.bind(this));
     this.input.addEventListener('input', this.updateInputHeight.bind(this));
-    this.contactInput.addEventListener('input', this.searchContact.bind(this));
+    this.contactInput.addEventListener('keyup', this.searchContact.bind(this));
     this.doneButton.addEventListener('click', this.executeDeletion.bind(this));
     this.headerTitle.addEventListener('click', this.activateContact.bind(this));
     this.clearButton.addEventListener('click', this.clearContact.bind(this));
@@ -1040,8 +1045,8 @@ var ThreadUI = {
     threadHTML.classList.add('item');
 
     // Retrieve info from thread
-    var name = Utils.escapeHTML(contact.name);
-    var number = Utils.escapeHTML(contact.tel[0].number);
+    var name = Utils.escapeHTML(contact.name.toString());
+    var number = Utils.escapeHTML(contact.tel[0].number.toString());
     // Create HTML structure
     var structureHTML =
             '  <a href="#num=' + contact.tel[0].number + '">' +
@@ -1053,13 +1058,17 @@ var ThreadUI = {
     ThreadUI.view.appendChild(threadHTML);
   },
 
-  searchContact: function thui_searchContact() {
+  searchContact: function thui_searchContact(evt) {
     var input = this.contactInput;
     var string = input.value;
     var self = this;
     this.view.innerHTML = '';
     if (!string) {
       return;
+    } else if (string.slice(-1) == ';') {
+      var tags = string.slice(0, -1).split(';');
+      var receiverStr = tags.slice(-1)[0];
+      this.addReceiverTag(receiverStr);
     }
     ContactDataManager.searchContactData(string, function gotContact(contacts) {
       if (!contacts || contacts.length == 0) {
@@ -1067,6 +1076,13 @@ var ThreadUI = {
       }
       contacts.forEach(self.renderContactData);
     });
+  },
+
+  addReceiverTag: function thui_addReceiverTag(str) {
+    var tagDiv = document.createElement('div');
+    tagDiv.classList.add('receiver-tag');
+    tagDiv.textContent = str;
+    this.tagContainer.appendChild(tagDiv);
   },
 
   pickContact: function thui_pickContact() {
