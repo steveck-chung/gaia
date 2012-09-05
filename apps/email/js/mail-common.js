@@ -96,7 +96,8 @@ function bindContainerClickAndHold(containerNode, clickFunc, holdFunc) {
       return holdFunc(node, event);
     });
 }
-
+// Add card mutation observer:
+var MutationObserver = window.MutationObserver || window.MozMutationObserver;
 /**
  * Fairly simple card abstraction with support for simple horizontal animated
  * transitions.  We are cribbing from deuxdrop's mobile UI's cards.js
@@ -207,7 +208,8 @@ var Cards = {
   _init: function() {
     this._rootNode = document.body;
     this._containerNode = document.getElementById('cardContainer');
-    this._cardsNode = document.getElementById('cards');
+    this._nodeObserver = null;
+    //this._cardsNode = document.getElementById('cards');
     this._templateNodes = processTemplNodes('card');
 
     this._containerNode.addEventListener('click',
@@ -222,9 +224,9 @@ var Cards = {
 
     // XXX be more platform detecty. or just add more events. unless the
     // prefixes are already gone with webkit and opera?
-    this._cardsNode.addEventListener('transitionend',
-                                     this._onTransitionEnd.bind(this),
-                                     false);
+    // this._cardsNode.addEventListener('transitionend',
+    //                                  this._onTransitionEnd.bind(this),
+    //                                  false);
   },
 
   /**
@@ -257,6 +259,10 @@ var Cards = {
   },
 
   _adjustCardSizes: function(evt) {
+    // XXX: tresting return
+    if (true) {
+      return;
+    }
     var cardWidth = this._containerNode.offsetWidth,
         cardHeight = this._containerNode.offsetHeight,
         totalWidth = 0;
@@ -264,10 +270,15 @@ var Cards = {
     for (var i = 0; i < this._cardStack.length; i++) {
       var cardInst = this._cardStack[i];
       var targetWidth = cardWidth;
-      if (cardInst.modeDef.tray)
-        targetWidth -= this.TRAY_GUTTER_WIDTH;
-      cardInst.domNode.style.width = targetWidth + 'px';
+
       cardInst.domNode.style.height = cardHeight + 'px';
+      if (cardInst.modeDef.tray) {
+        cardInst.domNode.style.width =
+          (targetWidth - this.TRAY_GUTTER_WIDTH) + 'px';
+        continue;
+      } else {
+        cardInst.domNode.style.width = targetWidth + 'px';
+      }
 
       cardInst.left = totalWidth;
       totalWidth += targetWidth;
@@ -351,6 +362,9 @@ var Cards = {
       throw new Error('No such card mode: ' + mode);
 
     var domNode = this._templateNodes[type].cloneNode(true);
+    domNode.addEventListener('transitionend',
+                                     this._onTransitionEnd.bind(this),
+                                     false);
 
     var cardImpl = new cardDef.constructor(domNode, mode, args);
     var cardInst = {
@@ -363,20 +377,25 @@ var Cards = {
     if (!placement) {
       cardIndex = this._cardStack.length;
       insertBuddy = null;
+      if (showMethod == 'animate') {
+        domNode.classList.add('right-pos');
+      }
     }
     else if (placement === 'left') {
       cardIndex = this.activeCardIndex++;
-      insertBuddy = this._cardsNode.children[cardIndex];
+      insertBuddy = this._containerNode.children[cardIndex];
+      domNode.classList.add('left-pos');
     }
     else if (placement === 'right') {
       cardIndex = this.activeCardIndex + 1;
       if (cardIndex >= this._cardStack.length)
         insertBuddy = null;
       else
-        insertBuddy = this._cardsNode.children[cardIndex];
+        insertBuddy = this._containerNode.children[cardIndex];
+      domNode.classList.add('right-pos');
     }
     this._cardStack.splice(cardIndex, 0, cardInst);
-    this._cardsNode.insertBefore(domNode, insertBuddy);
+    this._containerNode.insertBefore(domNode, insertBuddy);
     this._adjustCardSizes();
     if ('postInsert' in cardImpl)
       cardImpl.postInsert();
@@ -388,7 +407,23 @@ var Cards = {
       if (showMethod === 'animate' && placement === 'left')
         this._showCard(this.activeCardIndex, 'immediate');
 
-      this._showCard(cardIndex, showMethod);
+        this.testcardIndex= cardIndex;
+        this.testshowMethod =showMethod;
+        var nodeObserver = new MutationObserver(function(mutations) {  
+        mutations.forEach(function(mutation) {
+          console.log(mutation.type);
+          if (mutation.type === 'childList') {
+            this._showCard(this.testcardIndex, this.testshowMethod);
+          }
+        }.bind(this));
+      }.bind(this));
+
+      nodeObserver.observe(this._containerNode, {
+        attributes: false, 
+        childList: true, 
+        characterData: false
+      });
+      //window.setTimeout(this._showCard.bind(this, cardIndex, showMethod), 200);
     }
   },
 
@@ -627,37 +662,82 @@ var Cards = {
     }
   },
 
+  _showTray: function(target) {
+    if (this._trayActive) {
+      return;
+    }
+    var cardNode = target.domNode;
+    cardNode.classList.add('transit');
+    cardNode.classList.add('tray-pos');
+    this._trayActive = true;
+  },
+
+  _closeTray: function(target) {
+    if (!this._trayActive) {
+      return;
+    }
+    var cardNode = target.domNode;
+    cardNode.classList.remove('tray-pos');
+    this._trayActive = false;
+  },
+
   _showCard: function(cardIndex, showMethod) {
-    var cardInst = (cardIndex !== null) ? this._cardStack[cardIndex] : null;
+    var newInst = (cardIndex !== null) ? this._cardStack[cardIndex] : null;
+    var oldInst = (this.activeCardIndex !== null) ?
+                  this._cardStack[this.activeCardIndex] : null;
 
-    var targetLeft;
-    if (cardInst)
-      targetLeft = 'translateX(' + (-cardInst.left) + 'px)';
-    else
-      targetLeft = 'translateX(0px)';
+    if (newInst.modeDef.tray) {
+      this._showTray(oldInst);
+      this.activeCardIndex = cardIndex;
+      return;
+    } else if (this._trayActive) {
+      this._closeTray(newInst);
+      this.activeCardIndex = cardIndex;
+      return;
+    }
 
-    var cardsNode = this._cardsNode;
-    if (cardsNode.style.MozTransform !== targetLeft) {
+    // TODO: setting page movement:
+    
+    // var targetLeft;
+    // if (cardInst)
+    //   targetLeft = 'translateX(' + (-cardInst.left) + 'px)';
+    // else
+    //   targetLeft = 'translateX(0px)';
+
+    var containerNode = this._containerNode;
+    var newCardClass = newInst.domNode.classList;
+    var oldCardClass = oldInst? oldInst.domNode.classList : null;
+    if (newInst && newCardClass.contains('left-pos') ||
+        newCardClass.contains('right-pos')) {
       if (showMethod === 'immediate') {
         // XXX cross-platform support.
-        cardsNode.style.MozTransitionProperty = 'none';
-        // make sure the reflow sees the transition is turned off.
-        cardsNode.clientWidth;
+        newCardClass.remove('transit');
         // explicitly clear since there will be no animation
         this._eatingEventsUntilNextCard = false;
       }
       else {
+        newCardClass.add('transit');
+        if (oldInst) {
+          oldCardClass.add('transit');
+        }
         this._eatingEventsUntilNextCard = true;
       }
-      cardsNode.style.MozTransform = targetLeft;
-
-      if (showMethod === 'immediate') {
-        // make sure the instantaneous transition is seen before we turn
-        // transitions back on.
-        cardsNode.clientWidth;
-        // CROSS-BROWSER-TODO
-        cardsNode.style.MozTransitionProperty = '-moz-transform';
+      if (oldInst) {
+        cardIndex > this.activeCardIndex ? oldCardClass.add('left-pos') :
+                                           oldCardClass.add('right-pos'); 
       }
+      newCardClass.remove('left-pos');
+      newCardClass.remove('right-pos');
+      // newCardClass.add('center-pos');
+
+
+      // if (showMethod === 'immediate') {
+      //   // make sure the instantaneous transition is seen before we turn
+      //   // transitions back on.
+      //   cardsNode.clientWidth;
+      //   // CROSS-BROWSER-TODO
+      //   cardsNode.style.MozTransitionProperty = '-moz-transform';
+      // }
     }
     else {
       // explicitly clear since there will be no animation
@@ -665,8 +745,8 @@ var Cards = {
     }
 
     this.activeCardIndex = cardIndex;
-    if (cardInst)
-      this._trayActive = cardInst.modeDef.tray;
+    if (newInst)
+      this._trayActive = newInst.modeDef.tray;
   },
 
   _onTransitionEnd: function(event) {
