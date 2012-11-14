@@ -11,6 +11,7 @@ Calendar.ns('Views').ModifyEvent = (function() {
 
     this.save = this.save.bind(this);
     this.deleteRecord = this.deleteRecord.bind(this);
+    this.cancel = this.cancel.bind(this);
     this._toggleAllDay = this._toggleAllDay.bind(this);
 
     this._initEvents();
@@ -35,7 +36,8 @@ Calendar.ns('Views').ModifyEvent = (function() {
       status: '#modify-event-view section[role="status"]',
       errors: '#modify-event-view .errors',
       saveButton: '#modify-event-view .save',
-      deleteButton: '#modify-event-view .delete-record'
+      deleteButton: '#modify-event-view .delete-record',
+      cancelButton: '#modify-event-view .cancel'
     },
 
     _initEvents: function() {
@@ -47,6 +49,7 @@ Calendar.ns('Views').ModifyEvent = (function() {
 
       this.saveButton.addEventListener('click', this.save);
       this.deleteButton.addEventListener('click', this.deleteRecord);
+      this.cancelButton.addEventListener('click', this.cancel);
       this.form.addEventListener('submit', this.save);
 
       var allday = this.getField('allday');
@@ -185,20 +188,16 @@ Calendar.ns('Views').ModifyEvent = (function() {
       return this._findElement('form');
     },
 
-    get deleteButton() {
-      return this._findElement('deleteButton');
-    },
-
     get saveButton() {
       return this._findElement('saveButton');
     },
 
-    get status() {
-      return this._findElement('status');
+    get deleteButton() {
+      return this._findElement('deleteButton');
     },
 
-    get errors() {
-      return this._findElement('errors');
+    get cancelButton() {
+      return this._findElement('cancelButton');
     },
 
     /**
@@ -231,35 +230,6 @@ Calendar.ns('Views').ModifyEvent = (function() {
     },
 
     /**
-     * Displays a list of errors
-     *
-     * @param {Array} list error list
-     *  (see Event.validaitonErrors).
-     */
-    displayErrors: function(list) {
-      var _ = navigator.mozL10n.get;
-      var errors = '';
-
-      var i = 0;
-      var len = list.length;
-
-      for (; i < len; i++) {
-        var name = list[i].name;
-        errors += _(this.ERROR_PREFIX + name) || name;
-      }
-
-      // populate error and display it.
-      this.errors.textContent = errors;
-      this.status.classList.add(this.activeClass);
-
-      var self = this;
-      this.status.addEventListener('animationend', function displayError() {
-        self.status.classList.remove(self.activeClass);
-        self.status.removeEventListener('animationend', displayError);
-      });
-    },
-
-    /**
      * Ask the provider to an event:
      *
      *  1. update the model with form data
@@ -282,7 +252,7 @@ Calendar.ns('Views').ModifyEvent = (function() {
 
       var errors = this.event.validationErrors();
       if (errors) {
-        this.displayErrors(errors);
+        this.showErrors(errors);
         return;
       }
 
@@ -355,6 +325,13 @@ Calendar.ns('Views').ModifyEvent = (function() {
       } else {
         this._persistEvent('createEvent', 'canCreate');
       }
+    },
+
+    /**
+     * Dismiss modification and go back to previous screen.
+     */
+    cancel: function() {
+      window.back();
     },
 
     /**
@@ -449,17 +426,18 @@ Calendar.ns('Views').ModifyEvent = (function() {
 
       this.getField('location').value = model.location;
 
+      var dateSrc = model;
+      if (model.remote.isRecurring && this.busytime) {
+          dateSrc = this.busytime;
+      }
       this.getField('startDate').value =
-        InputParser.exportDate(model.startDate);
-
+        InputParser.exportDate(dateSrc.startDate);
       this.getField('endDate').value =
-        InputParser.exportDate(model.endDate);
-
+        InputParser.exportDate(dateSrc.endDate);
       this.getField('startTime').value =
-        InputParser.exportTime(model.startDate);
-
+        InputParser.exportTime(dateSrc.startDate);
       this.getField('endTime').value =
-          InputParser.exportTime(model.endDate);
+        InputParser.exportTime(dateSrc.endDate);
 
       this.getField('description').textContent =
         model.description;

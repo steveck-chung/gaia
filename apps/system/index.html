@@ -7,10 +7,12 @@
     <!-- Shared code -->
     <script src="shared/js/l10n.js"></script>
     <script src="shared/js/l10n_date.js"></script>
+    <script src="shared/js/idletimer.js"></script>
     <script defer src="shared/js/gesture_detector.js"></script>
     <script defer src="shared/js/settings_listener.js"></script>
     <script defer src="shared/js/custom_dialog.js"></script>
     <script defer src="shared/js/notification_helper.js"></script>
+    <script defer src="shared/js/async_storage.js"></script>
 
     <!-- Wrapper -->
     <link rel="stylesheet" type="text/css" href="style/wrapper/wrapper.css">
@@ -24,6 +26,7 @@
     <link rel="stylesheet" type="text/css" href="shared/style/confirm.css"/>
     <link rel="stylesheet" type="text/css" href="shared/style/headers.css"/>
     <link rel="stylesheet" type="text/css" href="shared/style/switches.css"/>
+    <link rel="stylesheet" type="text/css" href="shared/style/confirm.css"/>
 
     <!-- applications.js must not be deferred
          in order to catch webapps-registry-ready mozChromeEvent -->
@@ -126,6 +129,10 @@
     <link rel="stylesheet" type="text/css" href="style/permission_manager/permission_manager.css">
     <script defer src="js/permission_manager.js"></script>
 
+    <!-- App Install -->
+    <link rel="stylesheet" type="text/css" href="style/app_install_manager/app_install_manager.css">
+    <script defer src="js/app_install_manager.js"></script>
+
     <!-- Cost Control -->
     <link rel="stylesheet" type="text/css" href="style/cost_control/cost_control.css">
     <script defer src="js/cost_control.js"></script>
@@ -144,6 +151,8 @@
 
     <!-- Bluetooth -->
     <script defer src="js/bluetooth.js"></script>
+    <script defer src="js/bluetooth_transfer.js"></script>
+    <link rel="stylesheet" type="text/css" href="style/bluetooth_transfer/bluetooth_transfer.css">
 
     <!-- Wifi -->
     <script defer src="js/wifi.js"></script>
@@ -249,6 +258,9 @@
           data-level="5" hidden></div>
         <div id="statusbar-network-activity" class="sb-icon sb-icon-network-activity" hidden></div>
         <div id="statusbar-headphones" class="sb-icon sb-icon-headphones" hidden></div>
+        <div id="statusbar-system-downloads"
+             class="sb-icon sb-icon-system-downloads"
+             hidden></div>
 
         <!-- Permissions -->
         <div id="statusbar-tethering" class="sb-icon sb-icon-tethering" hidden></div>
@@ -271,13 +283,17 @@
         <div id="notifications-container">
           <!-- Update Manager -->
           <div id="update-manager-container">
-            <div class="count">
+            <div class="icon">
             </div>
             <div class="activity">
             </div>
             <div class="message">
             </div>
           </div>
+          <!-- bluetooth transfer -->
+          <div id="bluetooth-transfer-status-list">
+          </div>
+
           <div id="desktop-notifications-container">
           </div>
         </div>
@@ -327,7 +343,7 @@
           </section>
           <menu>
             <button id="dont-send-report" disabled="true" data-l10n-id="crash-dont-send">Don't Send</button>
-            <button id="send-report" data-l10n-id="crash-send">Send Report</button>
+            <button id="send-report" class="recommend" data-l10n-id="crash-send">Send Report</button>
           </menu>
         </form>
         <div id="popup-container">
@@ -338,7 +354,20 @@
               <div id="popup-throbber"></div>
             </header>
           </section>
-          <div id="frame-container"></div>
+          <div id="frame-container">
+            <div id="popup-error-dialog" role="dialog">
+              <div class="inner">
+                <h3 data-l10n-id="error-title" id="popup-error-title">Hmm, the app is having problems.</h3>
+                <p>
+                <span data-l10n-id="error-message" id="popup-error-message">The app has encountered an error and is not loading properly.</span>
+                </p>
+              </div>
+              <menu data-items="2">
+                <button id="popup-error-back" data-l10n-id="close">Close</button>
+                <button id="popup-error-reload" data-l10n-id="try-again">Try again</button>
+              </menu>
+            </div>
+          </div>
         </div>
 
         <div id="trustedui-container">
@@ -377,7 +406,7 @@
         <div id="modal-dialog">
           <div id="modal-dialog-alert" role="dialog">
             <div class="modal-dialog-message-container inner">
-              <h3></h3>
+              <h3 id="modal-dialog-alert-title"></h3>
               <p>
                 <span id="modal-dialog-alert-message"></span>
               </p>
@@ -389,7 +418,7 @@
 
           <div id="modal-dialog-confirm" role="dialog">
             <div class="modal-dialog-message-container inner">
-              <h3></h3>
+              <h3 id="modal-dialog-confirm-title"></h3>
               <p>
                 <span id="modal-dialog-confirm-message"></span>
               </p>
@@ -402,7 +431,7 @@
 
           <div id="modal-dialog-prompt" role="dialog">
             <div class="modal-dialog-message-container inner">
-              <h3></h3>
+              <h3 id="modal-dialog-prompt-title"></h3>
               <p>
                 <span id="modal-dialog-prompt-message"></span>
                 <input id="modal-dialog-prompt-input" />
@@ -416,15 +445,14 @@
 
           <div id="modal-dialog-error" role="dialog">
             <div class="modal-dialog-message-container inner">
-              <h3 data-l10n-id="error-title">Hmm, the app is having problems.</h3>
+              <h3 data-l10n-id="error-title" id="modal-dialog-error-title">Hmm, the app is having problems.</h3>
               <p>
-                <span id="modal-dialog-sad-face">:(</span>
-                <span data-l10n-id="error-message">The app has encountered an error and is not loading properly.</span>
+              <span data-l10n-id="error-message" id="modal-dialog-error-message">The app has encountered an error and is not loading properly.</span>
               </p>
             </div>
             <menu data-items="2">
-              <button id="modal-dialog-error-back" data-l10n-id="back">Back</button>
-              <button id="modal-dialog-error-reload" data-l10n-id="reload">Try Reloading</button>
+              <button id="modal-dialog-error-back" data-l10n-id="close">Close</button>
+              <button id="modal-dialog-error-reload" data-l10n-id="try-again">Try again</button>
             </menu>
           </div>
 
@@ -534,6 +562,43 @@
         </div>
       </div>
 
+      <form id="app-install-dialog" data-type="confirm" role="dialog" data-z-index-level="app-install-dialog">
+        <section>
+          <h1 id="app-install-message"></h1>
+          <table>
+            <tr>
+              <th data-l10n-id="size">Size</th>
+              <td id="app-install-size"></td>
+            </tr>
+            <tr>
+              <th data-l10n-id="author">Author</th>
+              <td>
+                <span id="app-install-author-name"></span>
+                <br /><span id="app-install-author-url"></span>
+              </td>
+            </tr>
+          </table>
+          <menu>
+            <button id="app-install-cancel-button" data-l10n-id="cancel">Cancel</button>
+            <button id="app-install-install-button" class="recommend" data-l10n-id="install">Install</button>
+          </menu>
+        </section>
+      </form>
+
+      <form id="updates-download-dialog" data-type="confirm" role="dialog" data-z-index-level="updates-download-dialog">
+        <section>
+          <h1>
+            Updates
+          </h1>
+          <ul>
+          </ul>
+          <menu>
+            <button id="updates-later-button" type="reset" data-l10n-id="later">Later</button>
+            <button id="updates-download-button" type="submit" data-l10n-id="download">Download</button>
+          </menu>
+        </section>
+      </form>
+
       <div id="lockscreen-camera" data-z-index-level="lockscreen-camera"></div>
 
       <div id="lockscreen" class="uninit" data-panel="main" data-z-index-level="lockscreen">
@@ -615,7 +680,7 @@
       </div>
 
       <div id="update-manager-toaster" data-z-index-level="notification-toaster">
-        <div class="count">
+        <div class="icon">
         </div>
         <div class="message">
         </div>

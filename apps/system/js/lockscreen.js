@@ -55,11 +55,6 @@ var LockScreen = {
   _passCodeTimeoutCheck: false,
 
   /*
-  * passcode to enable the smiley face easter egg.
-  */
-  smileyCode: '1337',
-
-  /*
   * Current passcode entered by the user
   */
   passCodeEntered: '',
@@ -570,6 +565,8 @@ var LockScreen = {
     var wasAlreadyLocked = this.locked;
     this.locked = true;
 
+    this.updateTime();
+
     this.switchPanel();
 
     this.overlay.focus();
@@ -581,8 +578,6 @@ var LockScreen = {
     this.mainScreen.classList.add('locked');
 
     screen.mozLockOrientation('portrait-primary');
-
-    this.updateTime();
 
     if (!wasAlreadyLocked) {
       if (document.mozFullScreen)
@@ -702,10 +697,13 @@ var LockScreen = {
     var overlay = this.overlay;
     var self = this;
     panel = panel || 'main';
+
     this.loadPanel(panel, function panelLoaded() {
       self.unloadPanel(overlay.dataset.panel, panel,
         function panelUnloaded() {
-          self.dispatchEvent('lockpanelchange');
+          if (overlay.dataset.panel !== panel)
+            self.dispatchEvent('lockpanelchange');
+
           overlay.dataset.panel = panel;
         });
     });
@@ -856,9 +854,6 @@ var LockScreen = {
   },
 
   checkPassCode: function lockscreen_checkPassCode() {
-    if (this.passCodeEntered === this.smileyCode)
-      this.overlay.classList.add('smiley');
-
     if (this.passCodeEntered === this.passCode) {
       this.overlay.dataset.passcodeStatus = 'success';
       this.passCodeError = 0;

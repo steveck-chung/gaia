@@ -13,7 +13,9 @@ const GridManager = (function() {
 
   var opacityOnAppGridPageMax = .7;
   var kPageTransitionDuration = .3;
-  var landingOverlay = document.querySelector('#landing-overlay');
+  var overlay = document.querySelector('#landing-overlay');
+  var overlayStyle = overlay.style;
+  var overlayTransition = 'opacity ' + kPageTransitionDuration + 's ease';
 
   var pages = [];
   var currentPage = 1;
@@ -175,27 +177,18 @@ const GridManager = (function() {
     }
   }
 
-  function setOverlayPanning(index, deltaX, backward, duration) {
-    if (index === 1 && !backward) {
-      applyEffectOverlay(landingOverlay,
-                         (deltaX / windowWidth) * -opacityOnAppGridPageMax,
-                         duration);
-    } else if (index === 2 && backward) {
-      applyEffectOverlay(landingOverlay, opacityOnAppGridPageMax -
-                         ((deltaX / windowWidth) * opacityOnAppGridPageMax),
-                         duration);
+  function setOverlayPanning(index, deltaX, forward) {
+    if (index === 1) {
+      overlayStyle.opacity = (Math.abs(deltaX) / windowWidth) * opacityOnAppGridPageMax;
+    } else if (index === 0 && !forward || index === 2 && forward) {
+      overlayStyle.opacity = opacityOnAppGridPageMax - (Math.abs(deltaX) / windowWidth)
+                              * opacityOnAppGridPageMax;
     }
   }
 
-  function applyEffectOverlay(overlay, value, duration) {
-    if (duration) {
-      overlay.style.MozTransition = 'opacity ' + duration + 's ease';
-      overlay.addEventListener('transitionend', function end(e) {
-        overlay.removeEventListener('transitionend', end);
-        overlay.style.MozTransition = '';
-      });
-    }
-    overlay.style.opacity = value;
+  function applyEffectOverlay(index) {
+    overlayStyle.MozTransition = overlayTransition;
+    overlayStyle.opacity = index === 1 ? 0 : opacityOnAppGridPageMax;
   }
 
   function onTouchEnd(deltaX) {
@@ -247,6 +240,7 @@ const GridManager = (function() {
 
       previousPage.container.dispatchEvent(new CustomEvent('gridpagehideend'));
       newPage.container.dispatchEvent(new CustomEvent('gridpageshowend'));
+      overlayStyle.MozTransition = '';
       togglePagesVisibility(index, index);
     }
 
@@ -257,13 +251,12 @@ const GridManager = (function() {
       var forward = 1;
       var start = currentPage;
       var end = index;
-      setOverlayPanning(index, 0, true, kPageTransitionDuration);
     } else {
       var forward = -1;
       var start = index;
       var end = currentPage;
-      setOverlayPanning(index, 0, false, kPageTransitionDuration);
     }
+    applyEffectOverlay(index);
 
     togglePagesVisibility(start, end);
 
@@ -340,11 +333,19 @@ const GridManager = (function() {
             }
           }
           HomeState.saveShortcuts(init.dock);
+
+          for (var i = apps.length - 1; i >= 0; i--) {
+            if (init.hidden.indexOf(apps[i]['origin']) != -1) {
+              apps.splice(i, 1);
+            }
+          }
+          HomeState.saveHiddens(init.hidden);
+
         } catch (e) {
           dump('Failed parsing homescreen configuration file: ' + e + '\n');
         }
 
-       var max = pageHelper.getMaxPerPage();
+        var max = pageHelper.getMaxPerPage();
         var list = [];
         for (var i = 0; i < apps.length; i++) {
           list.push(apps[i]);
@@ -406,12 +407,25 @@ const GridManager = (function() {
             }
           }
 
-          for (var origin in installedApps) {
-            GridManager.install(installedApps[origin]);
-          }
+          HomeState.getHiddens(function(hidden) {
 
-          updatePaginationBar();
-          finish();
+            if (hidden) {
+              var len = hidden.length;
+              for (var i = 0; i < len; i++) {
+                var origin = hidden[i].origin || hidden[i];
+                if (origin in installedApps) {
+                  delete installedApps[origin];
+                }
+              }
+            }
+
+            for (var origin in installedApps) {
+              GridManager.install(installedApps[origin]);
+            }
+
+            updatePaginationBar();
+            finish();
+          });
         });
       },
       function onerror() {

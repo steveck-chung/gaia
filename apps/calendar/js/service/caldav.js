@@ -4,7 +4,8 @@ Calendar.ns('Service').Caldav = (function() {
 
   /* TODO: ugly hack to enable system XHR fix upstream in Caldav lib */
   var xhrOpts = {
-    mozSystem: true
+    mozSystem: true,
+    mozAnon: true
   };
 
   Caldav.Xhr.prototype.globalXhrOptions = xhrOpts;
@@ -704,17 +705,31 @@ Calendar.ns('Service').Caldav = (function() {
 
     },
 
-    updateEvent: function(account, calendar, event, callback) {
+    /**
+     * Updates a single caldav event.
+     * Will handle updating both primary events and exceptions.
+     *
+     * @param {Object} account full account details.
+     * @param {Object} calendar full calendar details.
+     * @param {Object} eventDetails details to update the event.
+     * @param {Object} eventDetails.event modified remote event details.
+     * @param {Object} eventDetails.icalComponent
+     *  unmodified parsed ical component. (VCALENDAR).
+     */
+    updateEvent: function(account, calendar, eventDetails, callback) {
       var connection = new Caldav.Connection(
         account
       );
+
+      var icalComponent = eventDetails.icalComponent;
+      var event = eventDetails.event;
 
       var self = this;
       var req = this._assetRequest(connection, event.url);
       var etag = event.syncToken;
 
       // parse event
-      this.parseEvent(event.icalComponent, function(err, icalEvent) {
+      this.parseEvent(icalComponent, function(err, icalEvent) {
         var target = icalEvent;
 
         // find correct event

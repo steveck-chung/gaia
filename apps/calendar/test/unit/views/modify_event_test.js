@@ -10,7 +10,6 @@ suite('views/modify_event', function() {
 
   var subject;
   var controller;
-  var event;
   var app;
   var fmt;
 
@@ -65,6 +64,7 @@ suite('views/modify_event', function() {
     div.innerHTML = [
       '<div id="modify-event-view">',
         '<button class="save">save</button>',
+        '<button class="cancel">cancel</button>',
         '<button class="delete-record">delete</button>',
         '<section role="status">',
           '<div class="errors"></div>',
@@ -160,11 +160,11 @@ suite('views/modify_event', function() {
 
       controller.findAssociated = function() {
         calledLoad = arguments;
-      }
+      };
 
       subject._displayModel = function() {
         calledUpdate = arguments;
-      }
+      };
     });
 
     test('when change token is same', function() {
@@ -296,6 +296,34 @@ suite('views/modify_event', function() {
 
     });
 
+    test('use busytime instance when isRecurring', function() {
+      var eventRecurring = Factory('event', {
+        calendarId: 'foo',
+        remote: {
+          isRecurring: true,
+          startDate: new Date(2012, 1, 1),
+          endDate: new Date(2012, 1, 5)
+        }
+      });
+      var busytimeRecurring = Factory('busytime', {
+        eventId: eventRecurring._id,
+        startDate: new Date(2012, 10, 30),
+        endDate: new Date(2012, 10, 31)
+      });
+
+      subject.useModel(busytimeRecurring, eventRecurring);
+
+      var expected = {
+        startDate: busytimeRecurring.startDate,
+        endDate: busytimeRecurring.endDate
+      };
+
+      assert.hasProperties(
+        subject.formData(),
+        expected
+      );
+    });
+
     test('when start & end times are 00:00:00', function() {
       remote.startDate = new Date(2012, 0, 1);
       remote.endDate = new Date(2012, 0, 2);
@@ -373,7 +401,7 @@ suite('views/modify_event', function() {
       setup(function() {
         subject._loadModel = function() {
           calledWith = arguments;
-        }
+        };
       });
 
       test('existing model', function() {
@@ -519,21 +547,6 @@ suite('views/modify_event', function() {
     });
   });
 
-  test('#displayErrors', function() {
-    var errors = [{ name: 'foo' }];
-    subject.displayErrors(errors);
-
-    var list = subject.status.classList;
-    var errors = subject.errors.textContent;
-
-    assert.ok(errors);
-    assert.include(errors, 'foo');
-
-    assert.ok(list.contains(subject.activeClass));
-    triggerEvent(subject.status, 'animationend');
-    assert.ok(!list.contains(subject.activeClass));
-  });
-
   suite('#save', function() {
     var redirectTo;
     var provider;
@@ -556,9 +569,9 @@ suite('views/modify_event', function() {
         var errors = [];
         var displayedErrors;
 
-        subject.displayErrors = function() {
+        subject.showErrors = function() {
           displayedErrors = arguments;
-        }
+        };
 
         event.validationErrors = function() {
           return errors;
@@ -575,7 +588,7 @@ suite('views/modify_event', function() {
       setup(function() {
         provider.updateEvent = function() {
           calledWith = arguments;
-        }
+        };
 
         subject.onfirstseen();
         subject.useModel(busytime, event);
@@ -843,7 +856,7 @@ suite('views/modify_event', function() {
 
       provider.createEvent = function() {
         calledWith = arguments;
-      }
+      };
 
       triggerEvent(subject.form, 'submit');
       assert.ok(calledWith);
@@ -856,7 +869,7 @@ suite('views/modify_event', function() {
 
       provider.deleteEvent = function() {
         done();
-      }
+      };
 
       triggerEvent(subject.deleteButton, 'click');
     });
@@ -870,7 +883,7 @@ suite('views/modify_event', function() {
 
       provider.createEvent = function() {
         calledWith = arguments;
-      }
+      };
 
       triggerEvent(subject.saveButton, 'click');
       assert.ok(calledWith);
