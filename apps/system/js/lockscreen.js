@@ -75,9 +75,9 @@ var LockScreen = {
   triggeredTimeoutId: 0,
 
   /*
-  * Interval ID for jumping prompt of curve and arrow
+  * Interval ID for elastic of curve and arrow
   */
-  promptIntervalId: 0,
+  elasticIntervalId: 0,
 
   /*
   * start/end curve path data (position, curve control point)
@@ -97,9 +97,9 @@ var LockScreen = {
   CURVE_TRANSFORM_Y2_INDEX: 3,
 
   /*
-  * jumping prompt interval
+  * elastic animation interval
   */
-  PROMPT_INTERVAL: 5000,
+  ELASTIC_INTERVAL: 5000,
 
   /*
   * timeout for triggered state after swipe up
@@ -119,9 +119,8 @@ var LockScreen = {
 
     /* Gesture */
     this.area.addEventListener('mousedown', this);
-    this.areaHandle.addEventListener('mousedown', this);
-    this.areaCamera.addEventListener('mousedown', this);
-    this.areaUnlock.addEventListener('mousedown', this);
+    this.areaCamera.addEventListener('click', this);
+    this.areaUnlock.addEventListener('click', this);
     this.iconContainer.addEventListener('mousedown', this);
 
     /* Unlock & camera panel clean up */
@@ -186,12 +185,6 @@ var LockScreen = {
       0, function(value) {
       self.passCodeRequestTimeout = value;
     });
-
-    if (!this.promptIntervalId) {
-      this.promptIntervalId =
-        setInterval(this.prompt.bind(this), this.PROMPT_INTERVAL);
-    }
-
   },
 
   /*
@@ -255,6 +248,15 @@ var LockScreen = {
         this.updateConnState();
 
       case 'click':
+        // if ((evt.target === this.areaUnlock ||
+        //     evt.target === this.areaCamera) &&
+        //     this.overlay.classList.contains('triggered')) {
+        if (evt.target === this.areaUnlock || evt.target === this.areaCamera) {
+          console.log('handleIconClick');
+          this.handleIconClick(evt.target);
+          break;
+        }
+
         if (!evt.target.dataset.key)
           break;
 
@@ -270,15 +272,21 @@ var LockScreen = {
         var overlay = this.overlay;
         var target = evt.target;
 
-        clearInterval(this.promptIntervalId);
-        this.promptIntervalId = 0;
-        var animations = document.querySelectorAll('.animate-prompt');
-        Array.prototype.forEach.call(animations, function(el) {
+        /*
+        if (overlay.classList.contains('triggered') &&
+            target != leftTarget && target != rightTarget) {
+          this.unloadPanel();
+          break;
+        }
+        */
+
+        this.iconContainer.classList.remove('elastic');
+        this.setElasticEnabled(false);
+        Array.prototype.forEach.call(this.startAnimation, function(el) {
           el.endElement();
         });
 
         this._touch = {
-          target: target,
           touched: false,
           leftTarget: leftTarget,
           rightTarget: rightTarget,
@@ -290,32 +298,10 @@ var LockScreen = {
         window.addEventListener('mouseup', this);
         window.addEventListener('mousemove', this);
 
-        switch (target) {
-          case this.area:
-          case this.areaHandle:
-            this._touch.touched = true;
-            this._touch.initX = evt.pageX;
-            this._touch.initY = evt.pageY;
-
-            overlay.classList.add('touched');
-            break;
-
-          case this.accessibilityUnlock:
-            overlay.classList.add('touched');
-            this.areaUnlock.classList.add('triggered');
-            this.areaHandle.classList.add('triggered');
-            this._touch.target = this.areaUnlock;
-            this.handleGesture();
-            break;
-
-          case this.accessibilityCamera:
-            overlay.classList.add('touched');
-            this.areaUnlock.classList.add('triggered');
-            this.areaHandle.classList.add('triggered');
-            this._touch.target = this.areaCamera;
-            this.handleGesture();
-            break;
-        }
+        this._touch.touched = true;
+        this._touch.initX = evt.pageX;
+        this._touch.initY = evt.pageY;
+        overlay.classList.add('touched');
         break;
 
       case 'mousemove':
@@ -326,9 +312,6 @@ var LockScreen = {
         var handle = this.areaHandle;
         window.removeEventListener('mousemove', this);
         window.removeEventListener('mouseup', this);
-
-        if (evt.target !== this._touch.target)
-          this._touch.target = null;
 
         this.handleMove(evt.pageX, evt.pageY);
         this.handleGesture();
@@ -390,25 +373,21 @@ var LockScreen = {
     // Curve control point coordinate Y
     var cy = 150 - opacity * 150;
     touch.cy = cy;
-    var curvedata = this.CURVE_TRANSFORM_DATA.slice();
+    var curvedata = [].concat(this.CURVE_TRANSFORM_DATA);
     curvedata[this.CURVE_TRANSFORM_Y1_INDEX] = cy;
     curvedata[this.CURVE_TRANSFORM_Y2_INDEX] = cy;
 
-    this.iconContainer.style.transform = 'translateY(' + ty / 1.5 + 'px';
-    this.iconContainer.style.opacity = opacity;
+    this.iconContainer.style.transform = 'translateY(' + ty / 1.5 + 'px)';
     this.curvepath.setAttribute('d', curvedata.join(''));
     this.areaHandle.setAttribute('y', 100 - opacity * 100);
   },
 
   handleGesture: function ls_handleGesture() {
     var handleMax = window.innerHeight / 4;
-
     var touch = this._touch;
-    var target = touch.target;
 
-    if (!target && touch.cy < 80) {
-      var animations = document.querySelectorAll('.animate-to-end');
-      Array.prototype.forEach.call(animations, function(el) {
+    if (touch.cy < 80) {
+      Array.prototype.forEach.call(this.endAnimation, function(el) {
         el.setAttribute('fill', 'freeze');
         el.beginElement();
       });
@@ -420,26 +399,26 @@ var LockScreen = {
         self.areaHandle.setAttribute('y', 0);
         self.areaHandle.setAttribute('opacity', 0);
 
-        Array.prototype.forEach.call(animations, function(el) {
+        Array.prototype.forEach.call(self.endAnimation, function(el) {
           el.removeAttribute('fill');
         });
       });
       this.areaHandle.style.transform =
-        this.areaHandle.style.opacity =
-        this.iconContainer.style.transform =
-        this.iconContainer.style.opacity = '';
+      this.areaHandle.style.opacity =
+      this.iconContainer.style.transform =
+      this.iconContainer.style.opacity = '';
       this.overlay.classList.add('triggered');
 
       this.triggeredTimeoutId =
         setTimeout(this.unloadPanel.bind(this), this.TRIGGERED_TIMEOUT);
-      return;
     }
-    else if (!target || (target !== this.areaCamera &&
-             target !== this.areaUnlock)) {
+    else {
       this.unloadPanel();
-      return;
+      this.setElasticEnabled(true);
     }
+  },
 
+  handleIconClick: function ls_handleIconClick(target) {
     var self = this;
     switch (target) {
       case this.areaCamera:
@@ -522,6 +501,7 @@ var LockScreen = {
   unlock: function ls_unlock(instant) {
     var wasAlreadyUnlocked = !this.locked;
     this.locked = false;
+    this.setElasticEnabled(false);
 
     this.mainScreen.focus();
     if (instant) {
@@ -558,6 +538,8 @@ var LockScreen = {
     this.updateTime();
 
     this.switchPanel();
+
+    this.setElasticEnabled(ScreenManager.screenEnabled);
 
     this.overlay.focus();
     if (instant)
@@ -647,8 +629,7 @@ var LockScreen = {
       default:
         var self = this;
         var unload = function unload() {
-          var animations = document.querySelectorAll('.animate-to-start');
-          Array.prototype.forEach.call(animations, function(el) {
+          Array.prototype.forEach.call(self.startAnimation, function(el) {
             el.setAttribute('fill', 'freeze');
             el.beginElement();
           });
@@ -658,7 +639,7 @@ var LockScreen = {
             self.curvepath.setAttribute('stroke-opacity', '1.0');
             self.areaHandle.setAttribute('y', 100);
             self.areaHandle.setAttribute('opacity', 1);
-            Array.prototype.forEach.call(animations, function(el) {
+            Array.prototype.forEach.call(self.startAnimation, function(el) {
               el.removeAttribute('fill');
             });
           });
@@ -677,8 +658,6 @@ var LockScreen = {
           self.areaUnlock.classList.remove('triggered');
 
           clearTimeout(self.triggeredTimeoutId);
-          if (!self.promptIntervalId)
-            self.promptIntervalId = setInterval(self.prompt.bind(self), 5000);
         };
 
         if (toPanel !== 'camera') {
@@ -730,9 +709,12 @@ var LockScreen = {
 
     var timeFormat = _('shortTimeFormat') || '%H:%M';
     var dateFormat = _('longDateFormat') || '%A %e %B';
-    this.clock.textContent = f.localeFormat(d, timeFormat);
+    var time = f.localeFormat(d, timeFormat);
+    /** For DEBUGGING 
+    this.clockNumbers.textContent = time.match(/([01]?\d):[0-5]\d/g);
+    this.clockMeridiem.textContent = (time.match(/AM|PM/i) || []).join('');
     this.date.textContent = f.localeFormat(d, dateFormat);
-
+    **/
     var self = this;
     window.setTimeout(function ls_clockTimeout() {
       self.updateTime();
@@ -894,11 +876,13 @@ var LockScreen = {
 
   getAllElements: function ls_getAllElements() {
     // ID of elements to create references
-    var elements = ['connstate', 'mute', 'clock', 'date',
-        'area', 'area-unlock', 'area-camera', 'icon-container',
+    var elements = ['connstate', 'mute', 'clock-numbers', 'clock-meridiem',
+        'date', 'area', 'area-unlock', 'area-camera', 'icon-container',
         'area-handle', 'passcode-code', 'curvepath',
         'passcode-pad', 'camera', 'accessibility-camera',
         'accessibility-unlock', 'panel-emergency-call'];
+    var elementsForClass = ['start-animation', 'end-animation',
+        'elastic-animation'];
 
     var toCamelCase = function toCamelCase(str) {
       return str.replace(/\-(.)/g, function replacer(str, p1) {
@@ -908,6 +892,11 @@ var LockScreen = {
 
     elements.forEach((function createElementRef(name) {
       this[toCamelCase(name)] = document.getElementById('lockscreen-' + name);
+    }).bind(this));
+
+    elementsForClass.forEach((function createElementsRef(name) {
+      this[toCamelCase(name)] =
+        document.querySelectorAll('.lockscreen-' + name);
     }).bind(this));
 
     this.overlay = document.getElementById('lockscreen');
@@ -929,14 +918,31 @@ var LockScreen = {
     });
   },
 
-  prompt: function ls_prompt() {
+  setElasticEnabled: function ls_setElasticEnabled(value) {
+    if (value && !this.elasticIntervalId) {
+      this.elasticIntervalId =
+        setInterval(this.playElastic.bind(this), this.ELASTIC_INTERVAL);
+    }
+    else if (!value && this.elasticIntervalId) {
+      clearInterval(this.elasticIntervalId);
+      this.elasticIntervalId = 0;
+    }
+  },
+
+  playElastic: function ls_playElastic() {
     if (this._touch && this._touch.touched)
       return;
-
-    var animations = document.querySelectorAll('.animate-prompt');
-    Array.prototype.forEach.call(animations, function(el) {
+    var forEach = Array.prototype.forEach;
+    forEach.call(this.elasticAnimation, function(el) {
       el.beginElement();
     });
+    this.overlay.classList.add('elastic');
+
+    this.iconContainer.addEventListener('animationend',
+      function animationend() {
+        this.iconContainer.removeEventListener('animationend', animationend);
+        this.overlay.classList.remove('elastic');
+      }.bind(this));
   }
 };
 
