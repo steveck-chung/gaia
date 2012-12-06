@@ -233,10 +233,9 @@
 
 .lockscreen-icon-area {
   width: 16rem;
-  height: 10rem;
+  height: 12rem;
   position: absolute;
-  bottom: 1rem;
-  margin-bottom: -2.1rem;
+  bottom: -3rem;
   background-color: rgba(0,0,0,0.5)
   border: none;
 }
@@ -306,7 +305,7 @@ button::-moz-focus-inner {
 }
 
 #lockscreen-area-camera > div {
-  background: url('./images/icon-camera.png');
+  background-image: url('./images/icon-camera.png');
   background-position: center;
   background-repeat: no-repeat;
   margin-left: 4rem;
@@ -513,6 +512,7 @@ button::-moz-focus-inner {
   bottom: -5rem;
   height: 5rem;
   opacity: 0.4;
+  pointer-events: none;
   transition:
     transform 0.5s ease,
     opacity 0.5s ease;
@@ -525,6 +525,7 @@ button::-moz-focus-inner {
 .triggered #lockscreen-icon-container {
   transform: translateY(-8.5rem);
   opacity: 1;
+  pointer-events: auto;
 }
 
 @keyframes lockscreen-elastic {
