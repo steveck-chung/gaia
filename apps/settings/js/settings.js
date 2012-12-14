@@ -269,6 +269,7 @@ var Settings = {
     var type = input.dataset.type || input.type; // bug344618
     var key = input.name;
 
+    alert(this.dataset.href.substr(1));
     var settings = window.navigator.mozSettings;
     if (!key || !settings || event.type != 'change')
       return;

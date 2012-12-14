@@ -144,8 +144,8 @@ var Carrier = (function newCarrier(window, document, undefined) {
     };
 
     // force data connection to restart if changes are validated
-    apnPanel.querySelector('button[type=submit]').onclick =
-        restartDataConnection;
+    apnPanel.querySelector('button[type=submit]').addEventListener(
+      'click', restartDataConnection);
   }
 
   // restart data connection by toggling it off and on again

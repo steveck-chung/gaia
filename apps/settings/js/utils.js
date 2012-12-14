@@ -51,11 +51,11 @@ function openDialog(dialogID, onSubmit, onReset) {
 
   var submit = dialog.querySelector('[type=submit]');
   if (submit) {
-    submit.onclick = function onsubmit() {
+    submit.addEventListener('click', function onsubmit() {
       if (onSubmit)
         (onSubmit.bind(dialog))();
       document.location.hash = origin; // hide dialog box
-    };
+    });
   }
 
   var reset = dialog.querySelector('[type=reset]');
