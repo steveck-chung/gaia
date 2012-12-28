@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
-
+ * Simple Full Color (RGB Black/White) LCD Test
  */
 
 var LCDTest = {
@@ -29,7 +29,7 @@ var LCDTest = {
           testContainer.removeEventListener('click', lcdTestHandler);
           testContainer.style.backgroundColor = '';
           document.mozCancelFullScreen();
-          this.backToMenu();
+          backToMenu();
           break;
       }
     }
@@ -38,13 +38,6 @@ var LCDTest = {
     testContainer.addEventListener('click', lcdTestHandler.bind(this));
   },
   uninit: function lt_uninit() {
-  },
-  backToMenu: function lt_backToMenu() {
-    var evt = document.createEvent("MouseEvents");
-    var back = window.parent.document.getElementById('test-panel-back');
-    evt.initMouseEvent("click", true, true, window,
-      0, 0, 0, 0, 0, false, false, false, false, 0, null);
-    back.dispatchEvent(evt);
   }
 };
 

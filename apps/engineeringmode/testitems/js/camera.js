@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
-
+ * Camera launch testing
  */
 
 var CameraTest = {

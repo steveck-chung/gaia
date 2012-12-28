@@ -1,12 +1,11 @@
 'use stricts';
 
 /**
-
+ * Bluetooth detail information
  */
 
 var BluetoothTest = {
   init: function bt_init() {
-    var settings = window.navigator.mozSettings;
     var btEnabled = settings.createLock().get('bluetooth.enabled');
     $("status").innerHTML = btEnabled;
     $("address").innerHTML = btEnabled;

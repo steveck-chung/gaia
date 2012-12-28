@@ -30,6 +30,7 @@ body {
 
 #test-panel {
   -moz-transform: translateX(100%);
+  display: none;
 }
 
 #tests {
@@ -38,6 +39,7 @@ body {
 
 body.test #test-panel {
   -moz-transform: translateX(0);
+  display: block;
 }
 
 body.test #tests {

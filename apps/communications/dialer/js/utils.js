@@ -74,4 +74,3 @@ var Utils = {
     return additionalInfo;
   }
 };
-

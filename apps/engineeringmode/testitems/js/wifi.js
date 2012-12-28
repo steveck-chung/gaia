@@ -6,9 +6,10 @@
 
 var WifiTest = {
   init: function wt_init() {
-    var settings = window.navigator.mozSettings;
-    var mac = settings.createLock().get('deviceinfo.mac');
-    $("wifi_mac").innerHTML = JSON.stringify(mac);
+    var request = settings.createLock().get('deviceinfo.mac');
+    request.onsuccess = function(e) {
+      $("wifi_mac").textContent = request.result['deviceinfo.mac'];
+    }
   },
   uninit: function wt_uninit() {
   }

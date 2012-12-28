@@ -1282,7 +1282,7 @@ var WindowManager = (function() {
         }
 
         //Remove the origin and / to find if if the url is the entry point
-        if (path.indexOf('/' + ep) == 0 &&
+        if (path.indexOf(ep) > -1 &&
             (currentEp.launch_path == path)) {
           origin = origin + currentEp.launch_path;
           var lang = document.documentElement.lang;

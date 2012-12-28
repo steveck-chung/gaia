@@ -17,10 +17,15 @@
     "production-test":{
       "launch_path": "/index.html#production-test",
       "name": "Production test"
+    },
+    "IMEI-test":{
+      "launch_path": "/testitems/imei.html",
+      "name": "IMEI test"
     }
   },
   "permissions": {
     "mobileconnection":{},
+    "voicemail":{},
     "bluetooth":{},
     "device-storage:sdcard":{ "access": "readonly" },
     "device-storage:pictures":{ "access": "readonly" },

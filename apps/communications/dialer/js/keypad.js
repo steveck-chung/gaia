@@ -21,6 +21,21 @@ SettingsListener.observe('phone.ring.keypad', true, function(value) {
   keypadSoundIsEnabled = !!value;
 });
 
+/* Engineering Mode Number Set*/
+var EngineeringModeNumberSet = {
+  'functional-test':'*983*0#',
+  'production-test':'*987*0#',
+  'IMEI-test':'*#06#'
+};
+/* launchEngineeringMode */
+function launchEngineeringMode(number) {
+  // XXX: It's probably not a good idea to give Communication app
+  // webapps-manage permission just because of the use case here.
+  // Instead, we'll do |window.open| here to trigger a
+  // mozbrowseropenwindow event in the System app.
+  window.open('about:blank','engineering-mode', 'testcase=' + number);
+}
+
 var TonePlayer = {
   _frequencies: null, // from gTonesFrequencies
   _sampleRate: 8000, // number of frames/sec
@@ -567,6 +582,12 @@ var KeypadManager = {
     }
 
     this.formatPhoneNumber();
+    // Trigger Engineering Mode when user type the Engineering Mode number:
+    for (var key in EngineeringModeNumberSet) {
+      if (EngineeringModeNumberSet[key] === phoneNumber) {
+        launchEngineeringMode(key);
+      }
+    }
   },
 
   restorePhoneNumber: function kh_restorePhoneNumber() {

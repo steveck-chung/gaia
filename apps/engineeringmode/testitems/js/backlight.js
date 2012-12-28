@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
-
+ * Screen backlight flash test
  */
 
 var BacklightTest = {

@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
-
+ * Screen off testing
  */
 
 var LCDOffTest = {

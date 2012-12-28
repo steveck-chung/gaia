@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
-
+ *
  */
 
 var MemoryTest = {
@@ -14,11 +14,16 @@ var MemoryTest = {
     }
     var request = deviceStorage.stat();
     request.onsuccess = function(e) {
-      var totalSize = e.target.result.totalBytes;
-      $("ram_total").innerHTML = 'Unable to get it';
-      $("ram_available").innerHTML = 'Unable to get it';
-      $("rom_total").innerHTML = e.target.result.totalBytes;
-      $("rom_available").innerHTML = e.target.result.freeBytes;
+      var freeSzie = e.target.result.freeBytes;
+      var totalSize = e.target.result.totalBytes + e.target.result.freeBytes;
+      var fixedDigits = (totalSize < 1024 * 1024) ? 0 : 1;
+      var totalSizeInfo = FileSizeFormatter.getReadableFileSize(
+        totalSize, fixedDigits);
+      fixedDigits = (freeSzie < 1024 * 1024) ? 0 : 1;
+      var freeSizeInfo = FileSizeFormatter.getReadableFileSize(
+        freeSzie, fixedDigits);
+      $("rom_total").innerHTML = totalSizeInfo.size + totalSizeInfo.unit;
+      $("rom_available").innerHTML = freeSizeInfo.size + freeSizeInfo.unit;
     };
   },
   uninit: function mt_uninit() {

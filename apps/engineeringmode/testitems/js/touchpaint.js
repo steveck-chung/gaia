@@ -34,7 +34,7 @@ var TouchpaintTest = {
         return;
       }
       window.parent.document.mozCancelFullScreen();
-      this.backToMenu();
+      backToMenu();
     }
   },
   attachCornerBtns: function tpt_attachCornerBtns() {
@@ -85,13 +85,6 @@ var TouchpaintTest = {
     document.body.setAttribute('data-testcase', 'corner-test');
     this.attachCornerBtns();
     this.testBtn.style.display = 'none';
-  },
-  backToMenu: function tpt_backToMenu() {
-    var evt = document.createEvent("MouseEvents");
-    var back = window.parent.document.getElementById('test-panel-back');
-    evt.initMouseEvent("click", true, true, window,
-      0, 0, 0, 0, 0, false, false, false, false, 0, null);
-    back.dispatchEvent(evt);
   }
 };
 

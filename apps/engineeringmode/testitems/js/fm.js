@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
-
+ * FM radio testing
  */
 var mozFMRadio = window.navigator.mozFMRadio;
 var FMTest = {

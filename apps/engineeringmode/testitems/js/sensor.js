@@ -6,14 +6,34 @@
 
 var SensorTest = {
   init: function st_init() {
-    var _battery = window.navigator.battery;
-    $("accelerometer").innerHTML = _battery.charging;
-    $("magnetic").innerHTML = _battery.level;
-    $("gyroscope").innerHTML = _battery.charging;
-    $("light").innerHTML = _battery.level;
-    $("proximity").innerHTML = _battery.charging;
+    window.addEventListener('devicelight', this);
+    window.addEventListener('userproximity', this);
+    window.addEventListener('devicemotion', this);
   },
   uninit: function st_uninit() {
+  },
+  handleEvent: function st_handleEvent(evt) {
+    switch (evt.type) {
+      case 'devicelight':
+        $("light").textContent = evt.value;
+        break;
+      case 'userproximity':
+        $("proximity").textContent = evt.near;
+        break
+      case 'devicemotion':
+        if (evt.accelerationIncludingGravity) {
+          $('accelerometer').textContent =
+            'X : ' + evt.accelerationIncludingGravity.x +
+            ' Y : ' + evt.accelerationIncludingGravity.y +
+            ' Z : ' + evt.accelerationIncludingGravity.z;
+        } else if (evt.acceleration) {
+          $('accelerometer').textContent =
+            'X : ' + evt.acceleration.x +
+            ' Y : ' + evt.acceleration.y +
+            ' Z : ' + evt.acceleration.z;
+        }
+        break;
+    }
   }
 };
 

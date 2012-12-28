@@ -1,13 +1,14 @@
 'use stricts';
 
 /**
-
+ * Battery detail information
  */
 
 var BatteryTest = {
   init: function ct_init() {
-    $("status").innerHTML = battery.charging;
-    $("level").innerHTML = battery.level;
+    $("status").textContent = battery.charging;
+    $("level").textContent = parseFloat(battery.level) * 100;
+    $("scale").textContent = '100';
   },
   uninit: function ct_uninit() {
   }
