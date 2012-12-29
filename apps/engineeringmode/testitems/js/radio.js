@@ -8,10 +8,10 @@ var RadioTest = {
   init: function rit_init() {
     var req = mozMobileConnection.sendMMI('*#06#');
     req.onsuccess = function onsuccess(evt) {
-      $("imei").textContent = evt.target.result;
+      $('imei').textContent = evt.target.result;
     }
     req.onerror = function onerror() {
-      $("imei").textContent = 'N/A';
+      $('imei').textContent = 'N/A';
     }
     $('phone_num').textContent = mozMobileConnection.iccInfo.msisdn;
     $('current_net').textContent = mozMobileConnection.voice.network.longName;

@@ -6,9 +6,9 @@
 
 var BatteryTest = {
   init: function ct_init() {
-    $("status").textContent = battery.charging;
-    $("level").textContent = parseFloat(battery.level) * 100;
-    $("scale").textContent = '100';
+    $('status').textContent = battery.charging;
+    $('level').textContent = parseFloat(battery.level) * 100;
+    $('scale').textContent = '100';
   },
   uninit: function ct_uninit() {
   }

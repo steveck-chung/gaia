@@ -22,8 +22,8 @@ var MemoryTest = {
       fixedDigits = (freeSzie < 1024 * 1024) ? 0 : 1;
       var freeSizeInfo = FileSizeFormatter.getReadableFileSize(
         freeSzie, fixedDigits);
-      $("rom_total").innerHTML = totalSizeInfo.size + totalSizeInfo.unit;
-      $("rom_available").innerHTML = freeSizeInfo.size + freeSizeInfo.unit;
+      $('rom_total').innerHTML = totalSizeInfo.size + totalSizeInfo.unit;
+      $('rom_available').innerHTML = freeSizeInfo.size + freeSizeInfo.unit;
     };
   },
   uninit: function mt_uninit() {

@@ -19,7 +19,7 @@ var SDTest = {
       var usedSize = e.target.result.totalBytes;
       var totalSize = freeSzie + usedSize;
       if (totalSize == 0) {
-        $("mounted").textContent = 'No';
+        $('mounted').textContent = 'No';
         return;
       }
       var fixedDigits = (totalSize < 1024 * 1024) ? 0 : 1;
@@ -31,10 +31,10 @@ var SDTest = {
       fixedDigits = (usedSize < 1024 * 1024) ? 0 : 1;
       var usedSizeInfo = FileSizeFormatter.getReadableFileSize(
         usedSize, fixedDigits);
-      $("mounted").textContent = 'Yes';
-      $("used").textContent = usedSizeInfo.size + usedSizeInfo.unit;
-      $("total").textContent = totalSizeInfo.size + totalSizeInfo.unit;
-      $("available").textContent = freeSizeInfo.size + freeSizeInfo.unit;
+      $('mounted').textContent = 'Yes';
+      $('used').textContent = usedSizeInfo.size + usedSizeInfo.unit;
+      $('total').textContent = totalSizeInfo.size + totalSizeInfo.unit;
+      $('available').textContent = freeSizeInfo.size + freeSizeInfo.unit;
     };
 
   },

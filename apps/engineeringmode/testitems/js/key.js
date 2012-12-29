@@ -8,8 +8,8 @@ var KeyTest = {
   init: function kt_init() {
     var key = 'audio.volume.notification';
     var currVolume;
-    var upTag = $("vol_up");
-    var downTag = $("vol_down");
+    var upTag = $('vol_up');
+    var downTag = $('vol_down');
     settings.addObserver('audio.volume.notification', function(evt) {
       var newVol = evt.settingValue;
       if (newVol > currVolume || newVol == 15) {

@@ -2,7 +2,7 @@ html, body {
   height: 100%;
   padding: 0;
   margin: 0;
-
+  font-size: 10px;
 }
 
 body {
@@ -30,7 +30,7 @@ body {
 
 #test-panel {
   -moz-transform: translateX(100%);
-  display: none;
+  width: 0;
 }
 
 #tests {
@@ -39,7 +39,7 @@ body {
 
 body.test #test-panel {
   -moz-transform: translateX(0);
-  display: block;
+  width: 100%;
 }
 
 body.test #tests {
@@ -60,23 +60,23 @@ body.test #tests {
 
 .toolbar-top {
   top: 0;
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  height: 64px;
-  border-bottom: solid 3px #9b9b9b;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  height: 6rem;
+  border-bottom: solid 0.3rem #9b9b9b;
 }
 
 .list {
   position: absolute;
-  top: 64px;
+  top: 6rem;
   bottom: 0;
   left: 0;
   right: 0;
   overflow-y: auto;
   -moz-user-select: none;
 
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
   
   background: url("images/app-texture.png") repeat scroll 50% 50%, rgb(243, 243, 243);
   margin: 0;
@@ -86,16 +86,19 @@ body.test #tests {
 
 
 .toolbar-title {
-  font-size: 26px;
+  font-size: 2.4rem;
   font-weight: bold;
   margin: 0;
   padding: 0;
-  line-height: 64px;
-  text-align: center;
+  line-height: 6rem;
   color: rgb(51, 51, 51);
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+}
+
+#main-title {
+  text-align: center;
 }
 
 #tests[data-class="functional-test"] #functional-test {
@@ -108,13 +111,13 @@ body.test #tests {
 
 .list > li {
   -moz-box-sizing: border-box;
-  height: 56px;
-  padding: 4px 16px;
+  height: 5.5rem;
+  padding: 0.5rem 1.5rem;
   border-top: 1px solid hsla(207,22%,92%,1);
   border-bottom: 1px solid hsla(223,7%,81%,1);
 
-  font-size: 26px;
-  line-height: 48px;
+  font-size: 2.4rem;
+  line-height: 4.5rem;
   font-weight: 600;
 }
 
@@ -134,14 +137,14 @@ body.test #tests {
   border: none;
   width: 100%;
   height: -moz-calc(100% - 64px);
-  top: 64px;
+  top: 6rem;
   background-color: #fff;
   position: absolute;
 }
 
 #test-panel-back {
-  position: absolute;
-  font-size: 24px;
-  padding: 5px;
-  margin: 8px;
+  float: left;
+  font-size: 2.4rem;
+  padding: 0.5rem;
+  margin: 0.6rem 1rem;
 }

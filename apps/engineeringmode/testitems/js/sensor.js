@@ -15,10 +15,10 @@ var SensorTest = {
   handleEvent: function st_handleEvent(evt) {
     switch (evt.type) {
       case 'devicelight':
-        $("light").textContent = evt.value;
+        $('light').textContent = evt.value;
         break;
       case 'userproximity':
-        $("proximity").textContent = evt.near;
+        $('proximity').textContent = evt.near;
         break
       case 'devicemotion':
         if (evt.accelerationIncludingGravity) {
