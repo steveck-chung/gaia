@@ -32,7 +32,12 @@
     <!--PPP sent:<label id="ppp_sent"></label><br />-->
     <!--PPP received:<label id="ppp_received"></label><br />-->
     <!--Number of PPP since boot:<label id="ppp_boot"></label><br />-->
-    Set preferred network type:<selector></selector>
+    Set preferred network type:
+    <select name="ril.radio.preferredNetworkType" id="preferredNetworkType">
+      <option value="wcdma/gsm">Automatic</option>
+      <option value="gsm">2G only</option>
+      <option value="wcdma">3G only</option>
+    </select>
     <button id="airplain-mode">Turn off radio</button></p>
   </body>
 </html>
