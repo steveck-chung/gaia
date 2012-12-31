@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
-
+ * Device radio information/setting
  */
 
 var RadioTest = {
@@ -11,7 +11,7 @@ var RadioTest = {
       $('imei').textContent = evt.target.result;
     };
     imeiReq.onerror = function onerror() {
-      $('imei').textContent = 'N/A';
+      $('imei').textContent = dumpErrorLog('IMEI');
     };
     var req = settings.createLock().get('*');
     req.onsuccess = function() {
@@ -22,7 +22,7 @@ var RadioTest = {
         'Turn on the radio' : 'Turn off the radio';
     }.bind(this);
     req.onerror = function() {
-      console.error('Can not get preferred Network Type');
+      dumpErrorLog('Settings database');
     };
     $('preferredNetworkType').addEventListener('change', this.networkChange);
     $('airplain-mode').addEventListener('click', this.airplainModeToggle);
@@ -44,14 +44,18 @@ var RadioTest = {
     var noReplyReq = mozMobileConnection.getCallForwardingOption(2);
     noReplyReq.onsuccess = function() {
       var noReplyRules = noReplyReq.result;
-      $('call_redirect').textContent = noReplyRules.active;
+      $('call_redirect').textContent = noReplyRules[0].active;
+    };
+    noReplyReq.onerror = function() {
+      $('call_redirect').textContent = dumpErrorLog('getCallForwardingOption');
     }
   },
   uninit: function rit_uninit() {
 
   },
   networkChange: function rit_networkChange(evt) {
-    settings.createLock().set({'ril.radio.preferredNetworkType': evt.target.value});
+    settings.createLock().
+      set({'ril.radio.preferredNetworkType': evt.target.value});
   },
   airplainModeToggle: function rit_airplainModeToggle() {
     this.radioDisabled = !this.radioDisabled;

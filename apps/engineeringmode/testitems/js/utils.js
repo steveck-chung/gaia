@@ -1,14 +1,24 @@
 'use strict';
 
+/**
+ * Utils for testcase
+ */
 var battery = navigator.battery;
 var power = navigator.mozPower;
 var settings = navigator.mozSettings;
 var mozMobileConnection = navigator.mozMobileConnection;
 var mozVoicemail = navigator.mozVoicemail;
 var mozBluetooth = navigator.mozBluetooth;
+var mozFMRadio = navigator.mozFMRadio;
 
 function $(id) {
   return document.getElementById(id);
+}
+
+function dumpErrorLog(msg) {
+  var errorStr = 'Unable to get ' + msg + ' information.';
+  console.error(errorStr);
+  return errorStr;
 }
 
 function backToMenu() {

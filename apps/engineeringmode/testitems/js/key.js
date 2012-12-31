@@ -33,6 +33,9 @@ var KeyTest = {
       }
       currVolume = vol;
     };
+    request.onerror = function() {
+      document.body.innerHTML = dumpErrorLog(key);
+    }
   },
   uninit: function kt_uninit() {
   }

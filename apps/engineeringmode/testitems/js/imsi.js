@@ -6,7 +6,7 @@
 
 var IMSITest = {
   init: function imsi_init() {
-    $('imsi').innerHTML = '';
+    $('imsi').textContent = '';
   }
 };
 

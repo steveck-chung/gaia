@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
-
+ *  Get device SD card storage information
  */
 
 var SDTest = {
@@ -9,7 +9,7 @@ var SDTest = {
     var deviceStorage = navigator.getDeviceStorage('sdcard');
 
     if (!deviceStorage) {
-      console.error('Cannot get DeviceStorage');
+      document.body.innerHTML = dumpErrorLog('SDcard DeviceStorage');
       return;
     }
 

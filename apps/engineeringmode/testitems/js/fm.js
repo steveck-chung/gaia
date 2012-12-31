@@ -3,7 +3,7 @@
 /**
  * FM radio testing
  */
-var mozFMRadio = window.navigator.mozFMRadio;
+
 var FMTest = {
   init: function fmt_init() {
     var btns = document.getElementsByTagName('button');

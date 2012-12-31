@@ -1,13 +1,13 @@
 'use stricts';
 
 /**
-
+ * Device vibration test
  */
 
 var VibratorTest = {
   init: function vt_init() {
     if (!('vibrate' in navigator)) {
-      console.error('Vibrator could not work!');
+      document.body.innerHTML = dumpErrorLog('vibrate');
       return;
     }
     this.vibrateInterval = window.setInterval(function vibrate() {

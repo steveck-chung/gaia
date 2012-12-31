@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
-
+ *  Factory Reset page
  */
 
 var FactoryReset = {
@@ -13,12 +13,12 @@ var FactoryReset = {
   },
   reset: function fr_play() {
     if (!power) {
-      console.error('Cannot get mozPower');
+      document.body.innerHTML = dumpErrorLog('mozPower');
       return;
     }
 
     if (!power.factoryReset) {
-      console.error('Cannot invoke mozPower.factoryReset()');
+      document.body.innerHTML = dumpErrorLog('mozPower.factoryReset');
       return;
     }
     power.factoryReset();

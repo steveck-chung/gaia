@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
- *
+ *  Device ROM (apps DeviceStorage) information
  */
 
 var MemoryTest = {
@@ -9,7 +9,7 @@ var MemoryTest = {
     var deviceStorage = navigator.getDeviceStorage('apps');
 
     if (!deviceStorage) {
-      console.error('Cannot get DeviceStorage');
+      document.body.innerHTML = dumpErrorLog('Apps DeviceStorage');
       return;
     }
     var request = deviceStorage.stat();

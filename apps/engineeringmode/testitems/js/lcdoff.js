@@ -6,6 +6,10 @@
 
 var LCDOffTest = {
   init: function lot_init() {
+    if (!power) {
+      document.body.innerHTML = dumpErrorLog('power');
+      return;
+    }
     power.screenEnabled = false;
   },
   uninit: function lot_uninit() {

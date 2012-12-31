@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
-
+ *  Get device sensor light/proximity/accelerometer information
  */
 
 var SensorTest = {
@@ -19,7 +19,7 @@ var SensorTest = {
         break;
       case 'userproximity':
         $('proximity').textContent = evt.near;
-        break
+        break;
       case 'devicemotion':
         if (evt.accelerationIncludingGravity) {
           $('accelerometer').textContent =
@@ -31,6 +31,8 @@ var SensorTest = {
             'X : ' + evt.acceleration.x +
             ' Y : ' + evt.acceleration.y +
             ' Z : ' + evt.acceleration.z;
+        } else {
+          $('accelerometer').textContent = dumpErrorLog('accelerometer');
         }
         break;
     }

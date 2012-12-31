@@ -1,7 +1,7 @@
 'use stricts';
 
 /**
-
+ *  Device production(SW/HW/FW/bluetooth...) information
  */
 
 var ProductionTest = {
@@ -22,6 +22,9 @@ var ProductionTest = {
         settings.createLock().set({'bluetooth.enabled': true});
       }
     }.bind(this);
+    req.onerror = function(e) {
+      dumpErrorLog('Settings database');
+    }
     mozBluetooth.onadapteradded = function pt_adapterAdded() {
       this.initDefaultAdapter();
     }.bind(this);

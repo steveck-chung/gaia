@@ -19,7 +19,7 @@ var BluetoothTest = {
     }.bind(this);
     req.onerror = function bt_getSettingsError() {
       var btEnabled = req.result['bluetooth.enabled'];
-      $('status').textContent = 'Unable to get bluetooth status!';
+      $('status').textContent = dumpErrorLog('bluetooth');
     };
     mozBluetooth.onadapteradded = function bt_adapterAdded() {
       this.initDefaultAdapter();

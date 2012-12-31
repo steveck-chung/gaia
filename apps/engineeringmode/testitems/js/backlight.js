@@ -6,9 +6,10 @@
 
 var BacklightTest = {
   init: function blt_init() {
-    if (!power)
+    if (!power) {
+      document.body.innerHTML = dumpErrorLog('power');
       return;
-
+    }
     this.exit = false;
     this.flashInterval = window.setInterval(function flash() {
       if (power.screenBrightness === 1.0 && !this.exit) {
