@@ -775,14 +775,15 @@ var ThreadUI = {
   },
 
   enableSend: function thui_enableSend() {
+    if (this.input.value.length > 0) {
+      this.updateCounter();
+    }
     if (window.location.hash == '#new' && this.contactInput.value.length == 0) {
       this.sendButton.disabled = true;
-      this.updateCounter();
       return;
     }
 
     this.sendButton.disabled = !(this.input.value.length > 0);
-    this.updateCounter();
   },
 
   scrollViewToBottom: function thui_scrollViewToBottom(animateFromPos) {
