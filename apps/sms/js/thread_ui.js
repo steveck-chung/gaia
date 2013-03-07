@@ -477,6 +477,9 @@ var ThreadUI = {
     // Go to Bottom
     ThreadUI.scrollViewToBottom();
   },
+  createMmsContent: function thui_createMmsContent(dataArray) {
+    // TODO: Contruct MMS bubble HTML content with attachment data
+  },
   // Method for rendering the list of messages using infinite scroll
   renderMessages: function thui_renderMessages(filter, callback) {
     // We initialize all params before rendering
@@ -564,7 +567,14 @@ var ThreadUI = {
     if (message.delivery === 'error')
       ThreadUI.addResendHandler(message, messageDOM);
 
-    var bodyHTML = LinkHelper.searchAndLinkClickableData(bodyText);
+    var bodyHTML = '';
+    if (message.type && message.type === 'mms') { // MMS
+      MessageManager.extractMmsMessage(message, function(slideArray) {
+        bodyHTML = ThreadUI.createMmsContent(slideArray);
+      });
+    } else { // SMS
+      bodyHTML = LinkHelper.searchAndLinkClickableData(bodyText);
+    }
     // check for messageDOM paragraph element to assign linked message html
     // For now keeping the containing anchor markup as this
     // structure is part of building blocks.
