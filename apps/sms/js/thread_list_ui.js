@@ -265,7 +265,21 @@ var ThreadListUI = {
     threadDOM.dataset.time = timestamp;
 
     // Retrieving params from thread
-    var bodyText = (thread.body || '').split('\n')[0];
+    var textContent = '';
+    if (thread.type && thread.type === 'mms') { // MMS
+      // Extract the text from slide which contains text attachment
+      // and appears earlier than other text-embedded slide pages.
+      var dataArray = MessageManager.smilDecomposer(thread);
+      for (var i = 0; i < dataArray.length; i++) {
+        if (dataArray[i].text) {
+          textContent = dataArray[i].text;
+          break;
+        }
+      }
+    } else { // SMS
+      textContent = (thread.body || '');
+    }
+    var bodyText = textContent.split('\n')[0];
     var bodyHTML = Utils.escapeHTML(bodyText);
     var formattedDate = Utils.getFormattedHour(timestamp);
     // Create HTML Structure

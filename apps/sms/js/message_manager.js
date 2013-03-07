@@ -293,15 +293,31 @@ var MessageManager = {
       console.log(msg);
     };
   },
-  send: function mm_send(number, text, callback, errorHandler) {
-    var req = this._mozSms.send(number, text);
-    req.onsuccess = function onsuccess(e) {
-      callback && callback(req.result);
-    };
+  createMmsMessage: function mm_createMmsMessage(number, slideArray) {
+    var msg;
+    // TODO: Create smil document and attachments for MMS message
+    return msg;
+  },
+  extractMmsMessage: function mm_extractMmsMessage(msg) {
+    // TODO: Extract media and text from each smil document slide and
+    //       generate an array with attachment information.
+    return slideArray;
+  },
+  send: function mm_send(number, msgContent, callback, errorHandler) {
+    if (typeof msgContent === 'string') { // send SMS
+      var req = this._mozSms.send(number, msgContent);
+      req.onsuccess = function onsuccess(e) {
+        callback && callback(req.result);
+      };
 
-    req.onerror = function onerror(e) {
-      errorHandler && errorHandler(number);
-    };
+      req.onerror = function onerror(e) {
+        errorHandler && errorHandler(number);
+      };
+    } else if (Array.isArray(msgContent)) { // send MMS
+      var mmsMsg = this.createMmsMessage(number, msgContent);
+      // TODO: Calll Send MMS message API
+    }
+
   },
 
   deleteMessage: function mm_deleteMessage(id, callback) {

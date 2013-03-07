@@ -477,6 +477,9 @@ var ThreadUI = {
     // Go to Bottom
     ThreadUI.scrollViewToBottom();
   },
+  createMmsContent: function thui_createMmsContent(dataArray) {
+    // TODO: Contruct MMS bubble HTML content with attachment data
+  },
   // Method for rendering the list of messages using infinite scroll
   renderMessages: function thui_renderMessages(filter, callback) {
     // We initialize all params before rendering
@@ -530,10 +533,15 @@ var ThreadUI = {
   appendMessage: function thui_appendMessage(message, hidden) {
     // Retrieve all data from message
     var id = message.id;
-    var bodyText = message.body;
-    var bodyHTML = Utils.escapeHTML(bodyText);
     var timestamp = message.timestamp.getTime();
     var messageClass = message.delivery;
+    var bodyHTML = '';
+    if (message.type && message.type === 'mms') { // MMS
+      var slideArray = MessageManager.extractMmsMessage(message);
+      bodyHTML = ThreadUI.createMmsContent(slideArray);
+    } else { // SMS
+      bodyHTML = Utils.escapeHTML(message.body);
+    }
 
     var messageDOM = document.createElement('li');
     messageDOM.classList.add('bubble');
