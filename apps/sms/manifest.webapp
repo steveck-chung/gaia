@@ -9,7 +9,7 @@
   },
   "permissions": {
     "sms":{},
-    "contacts":{ "access": "readonly" },
+    "contacts":{ "access": "readwrite" },
     "mobileconnection":{},
     "settings":{ "access": "readonly" },
     "audio-channel-notification":{},
