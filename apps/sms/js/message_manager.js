@@ -295,7 +295,42 @@ var MessageManager = {
   },
   createMmsMessage: function mm_createMmsMessage(number, slideArray) {
     var msg;
-    // TODO: Create smil document and attachments for MMS message
+    var attachment = [];
+    var header = '<head><layout>' +
+                 '<region id="Media" height="80%" width="100%" fit="meet"/>' +
+                 '<region id="Text" height="20%" width="100%" fit="scroll"/>' +
+                 '</layout></head>';
+    var body = '<body>';
+    for (var i = 0; i < slideArray.length; i++) {
+      // Set slide duration to 5 sec if the media is image.
+      var type = slideArray[i].blob.type.split('/')[0];
+      if (type === 'image')
+        type = 'img';
+      var par = '<par' + type === 'img' ? ' dur="5s">' : '>';
+      // Wrap media and text data into mms attachment.
+      // Set multimedia region.
+      var media = '<' + type + ' src="' + slideArray[i].name +
+                  '" region="Media"/>';
+      attachment.push({
+        name: slideArray[i].name,
+        blob: slideArray[i].blob
+      });
+      if (slideArray[i].text) {
+        // Set text region.
+        var text = '<text src="' + i + '.txt" region="Text"/>';
+        attachment.push({
+          name: i + '.txt',
+          blob: new Blob([slideArray[i].text], {type: 'text/plain'})
+        });
+      }
+      par += media + text + '</par>';
+      body += par;
+    }
+    body += '</body>';
+    var smil = '<smil>' + header + body + '</smil>';
+    var doc = (new DOMParser()).parseFromString(smil, 'application/smil');
+    msg = new MmsMessage(number, doc);
+    // TODO: Set message attachment
     return msg;
   },
   extractMmsMessage: function mm_extractMmsMessage(msg) {
