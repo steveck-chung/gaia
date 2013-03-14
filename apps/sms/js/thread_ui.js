@@ -995,14 +995,18 @@ var ThreadUI = {
       var activity = new MozActivity({
         name: 'pick',
         data: {
-          type: 'webcontacts/contact'
+          type: 'image/jpeg'
         }
       });
+      var text = this.input.value;
+      var num = this.contactInput.value;
       activity.onsuccess = function success() {
-        var number = this.result.number;
-        if (number) {
-          window.location.hash = '#num=' + number;
-        }
+        // var number = this.result.number;
+        // if (number) {
+        //   window.location.hash = '#num=' + number;
+        // }
+        MessageManager.send(num,
+          [{name: 'test.jpg', blob: this.result.blob, text: text}]);
       };
     } catch (e) {
       console.log('WebActivities unavailable? : ' + e);

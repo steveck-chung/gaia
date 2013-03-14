@@ -295,7 +295,7 @@ var MessageManager = {
   },
   createMmsMessage: function mm_createMmsMessage(number, slideArray) {
     var msg;
-    var attachment = [];
+    var attachments = [];
     var header = '<head><layout>' +
                  '<region id="Media" height="80%" width="100%" fit="meet"/>' +
                  '<region id="Text" height="20%" width="100%" fit="scroll"/>' +
@@ -303,56 +303,91 @@ var MessageManager = {
     var body = '<body>';
     for (var i = 0; i < slideArray.length; i++) {
       // Set slide duration to 5 sec if the media is image.
-      var type = slideArray[i].blob.type.split('/')[0];
+      // var type = slideArray[i].blob.type.split('/')[0];
+      var type = 'image';
       if (type === 'image')
         type = 'img';
-      var par = '<par' + type === 'img' ? ' dur="5s">' : '>';
+      var par = '<par' + (type === 'img' ? ' dur="5s">' : '>');
       // Wrap media and text data into mms attachment.
       // Set multimedia region.
       var media = '<' + type + ' src="' + slideArray[i].name +
                   '" region="Media"/>';
-      attachment.push({
-        name: slideArray[i].name,
-        blob: slideArray[i].blob
+      attachments.push({
+        id: attachments.length,
+        location: slideArray[i].name,
+        content: slideArray[i].blob
       });
       if (slideArray[i].text) {
         // Set text region.
         var text = '<text src="' + i + '.txt" region="Text"/>';
-        attachment.push({
-          name: i + '.txt',
-          blob: new Blob([slideArray[i].text], {type: 'text/plain'})
+        attachments.push({
+          id: attachments.length,
+          location: i + '.txt',
+          content: new Blob([slideArray[i].text], {type: 'text/plain'})
         });
       }
-      par += media + text + '</par>';
+      par += (media + text + '</par>');
       body += par;
     }
     body += '</body>';
-    var smil = '<smil>' + header + body + '</smil>';
-    var doc = (new DOMParser()).parseFromString(smil, 'application/smil');
-    msg = new MmsMessage(number, doc);
-    // TODO: Set message attachment
-    return msg;
+    var smilString = '<smil>' + header + body + '</smil>';
+    var doc = (new DOMParser()).parseFromString(smilString, 'application/xml');
+    return {
+      smil: smilString,
+      attachments: attachments
+    };
   },
   extractMmsMessage: function mm_extractMmsMessage(msg) {
     // TODO: Extract media and text from each smil document slide and
     //       generate an array with attachment information.
+    var smil = msg.smil;
+    var attachments = msg.attachments;
+    var slideArray = [];
+    // Handle mm without smil document: If the attachments contain more than
+    // one text resource, we will aggregate all text into the last slide.
+    if (!smil) {
+      var text = '';
+      for (var i = 0; i < attachments.length; i++) {
+        var blob = attachments[i].content;
+        var type = blob.type.split('/')[0];
+        if (type === 'text') {
+          text += blob;
+        } else {
+          slideArray.push({
+            name: attachments[i].location,
+            blob: blob,
+            text: (i === (attachments.length - 1) ? text : '')
+          });
+        }
+      }
+    } else {
+      var slides = smil.getElementsByTagName('par');
+      for (var i = 0; i < slides.length; i++) {
+
+      }
+    }
     return slideArray;
   },
   send: function mm_send(number, msgContent, callback, errorHandler) {
+    var req;
     if (typeof msgContent === 'string') { // send SMS
-      var req = this._mozSms.send(number, msgContent);
-      req.onsuccess = function onsuccess(e) {
-        callback && callback(req.result);
-      };
-
-      req.onerror = function onerror(e) {
-        errorHandler && errorHandler(number);
-      };
+      req = this._mozSms.send(number, msgContent);
     } else if (Array.isArray(msgContent)) { // send MMS
-      var mmsMsg = this.createMmsMessage(number, msgContent);
-      // TODO: Calll Send MMS message API
+      var msg = this.createMmsMessage(number, msgContent);
+      req = navigator.mozMobileMessage.sendMMS({
+        receivers: [number],
+        subject: 'test image subject',
+        smil: msg.smil,
+        attachments: msg.attachments
+      });
     }
+    req.onsuccess = function onsuccess(e) {
+      callback && callback(req.result);
+    };
 
+    req.onerror = function onerror(e) {
+      errorHandler && errorHandler(number);
+    };
   },
 
   deleteMessage: function mm_deleteMessage(id, callback) {
