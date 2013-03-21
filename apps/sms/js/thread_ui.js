@@ -479,6 +479,21 @@ var ThreadUI = {
   },
   createMmsContent: function thui_createMmsContent(dataArray) {
     // TODO: Contruct MMS bubble HTML content with attachment data
+    var body = '';
+    for (var i = 0; i < dataArray.length; i++) {
+      var mediaString = '';
+      var textString = '';
+      if (dataArray[i].name && dataArray[i].blob) {
+        mediaString = '<img src="' + URL.createObjectURL(dataArray[i].blob) +
+                      '" width="100px"/><br>';
+      }
+      if (dataArray[i].text) {
+        textString =
+             LinkHelper.searchAndLinkClickableData(dataArray[i].text) + '<br>';
+      }
+      body += (mediaString + textString);
+    }
+    return body;
   },
   // Method for rendering the list of messages using infinite scroll
   renderMessages: function thui_renderMessages(filter, callback) {
@@ -568,9 +583,10 @@ var ThreadUI = {
       ThreadUI.addResendHandler(message, messageDOM);
 
     var bodyHTML = '';
+    var pElement = messageDOM.querySelector('p');
     if (message.type && message.type === 'mms') { // MMS
       MessageManager.extractMmsMessage(message, function(slideArray) {
-        bodyHTML = ThreadUI.createMmsContent(slideArray);
+        pElement.innerHTML = ThreadUI.createMmsContent(slideArray);
       });
     } else { // SMS
       bodyHTML = LinkHelper.searchAndLinkClickableData(bodyText);
@@ -581,7 +597,6 @@ var ThreadUI = {
     // http://buildingfirefoxos.com/building-blocks/lists/
     // Todo: Open bug to fix contaning anchor to div to avoid
     // below extra innerHTML call
-    var pElement = messageDOM.querySelector('p');
     pElement.innerHTML = bodyHTML;
     return messageDOM;
   },
