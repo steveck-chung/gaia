@@ -294,53 +294,6 @@ var MessageManager = {
       console.log(msg);
     };
   },
-  createMmsMessage: function mm_createMmsMessage(number, slideArray) {
-    var msg;
-    var attachments = [];
-    var header = '<head><layout>' +
-                 '<root-layout width="320px" height="480px"/>' +
-                 '<region id="Image" left="0px" top="0px"' +
-                 ' width="320px" height="320px" fit="meet"/>' +
-                 '<region id="Text" left="0px" top="320px"' +
-                 ' width="320px" height="160px" fit="meet"/>' +
-                 '</layout></head>';
-    var body = '<body>';
-    for (var i = 0; i < slideArray.length; i++) {
-      // Set slide duration to 5 sec if the media is image.
-      var type = slideArray[i].blob.type.split('/')[0];
-      if (type === 'image')
-        type = 'img';
-      var par = '<par' + (type === 'img' ? ' dur="5000ms">' : '>');
-      // Wrap media and text data into mms attachment.
-      // Set multimedia region.
-      var media = '<' + type + ' src="' + slideArray[i].name +
-                  '" region="Image"/>';
-      attachments.push({
-        id: '<' + slideArray[i].name + '>',
-        location: slideArray[i].name,
-        content: slideArray[i].blob
-      });
-      var text = '';
-      if (slideArray[i].text) {
-        // Set text region.
-        var src = 'text_' + i + '.txt';
-        text = '<text src="' + src + '" region="Text"/>';
-        attachments.push({
-          id: '<text_' + i + '>',
-          location: src,
-          content: new Blob([slideArray[i].text], {type: 'text/plain'})
-        });
-      }
-      par += (media + text + '</par>');
-      body += par;
-    }
-    body += '</body>';
-    var smilString = '<smil>' + header + body + '</smil>';
-    return {
-      smil: smilString,
-      attachments: attachments
-    };
-  },
   extractMmsMessage: function mm_extractMmsMessage(msg, callback) {
     var smil = msg.smil;
     var attachments = msg.attachments;
@@ -433,7 +386,7 @@ var MessageManager = {
     if (typeof msgContent === 'string') { // send SMS
       req = this._mozMobileMessage.send(number, msgContent);
     } else if (Array.isArray(msgContent)) { // send MMS
-      var msg = this.createMmsMessage(number, msgContent);
+      var msg = SMIL.generate(msgContent);
       req = navigator._mozMobileMessage.sendMMS({
         receivers: [number],
         subject: '',
