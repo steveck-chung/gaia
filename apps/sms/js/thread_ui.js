@@ -585,7 +585,7 @@ var ThreadUI = {
     var bodyHTML = '';
     var pElement = messageDOM.querySelector('p');
     if (message.type && message.type === 'mms') { // MMS
-      MessageManager.extractMmsMessage(message, function(slideArray) {
+      SMIL.parse(message, function(slideArray) {
         pElement.innerHTML = ThreadUI.createMmsContent(slideArray);
       });
     } else { // SMS

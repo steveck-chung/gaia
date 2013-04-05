@@ -4,6 +4,101 @@
 'use strict';
 
 var SMIL = {
+  parse: function SMIL_parse(message, callback) {
+    var smil = message.smil;
+    var attachments = message.attachments;
+    var slides = [];
+    var activeReaders = 0;
+    var workingText = [];
+    var doc;
+    var parTags;
+
+    function readTextBlob(blob, callback) {
+      var textReader = new FileReader();
+      textReader.onload = function(event) {
+        activeReaders--;
+        callback(event, event.target.result);
+      };
+      activeReaders++;
+      textReader.readAsText(blob);
+    }
+
+    function exitPoint() {
+      if (!activeReaders) {
+        callback(slides);
+      }
+    }
+
+    function findAttachment(name) {
+      var index = 0;
+      var length = attachments.length;
+      for (; index < length; index++) {
+        if (attachments[index].location === name) {
+          return attachments[index];
+        }
+      }
+      return null;
+    }
+
+    // handle mms messages without smil
+    // aggregate all text attachments into last slide
+    if (!smil) {
+      attachments.forEach(function(attachment, index) {
+        var textIndex = workingText.length;
+        var blob = attachment.content;
+        if (!blob) {
+          return;
+        }
+        var type = blob.type.split('/')[0];
+
+        // handle text blobs by reading them and converting to text on the
+        // last slide
+        if (type === 'text') {
+          workingText[textIndex] = '';
+          readTextBlob(blob, function(event, text) {
+            workingText[textIndex] = text;
+            if (!activeReaders) {
+              if (!slides.length) {
+                slides.push({
+                  text: workingText.join(' ')
+                });
+              } else {
+                slides[slides.length - 1].text = workingText.join(' ');
+              }
+              exitPoint();
+            }
+          });
+        } else {
+          slides.push({
+            name: attachment.location,
+            blob: attachment.content
+          });
+        }
+      });
+    // handle MMS messages with SMIL
+    } else {
+      doc = (new DOMParser()).parseFromString(smil, 'application/xml');
+      parTags = doc.documentElement.getElementsByTagName('par');
+      Array.prototype.forEach.call(parTags, function(par, index) {
+        var mediaElement = par.querySelector('img, video, audio');
+        var textElement = par.querySelector('text');
+        var slide = slides[index] = {};
+        if (mediaElement) {
+          slide.name = mediaElement.getAttribute('src');
+          slide.blob = findAttachment(slide.name).content;
+        }
+        if (textElement) {
+          readTextBlob(findAttachment(textElement.getAttribute('src')).content,
+            function(event, text) {
+              slide.text = text;
+              exitPoint();
+            }
+          );
+        }
+      });
+    }
+    exitPoint();
+  },
   generate: function SMIL_generate(slides) {
     var attachments = [];
     var header = '<head><layout>' +
@@ -27,7 +122,7 @@ var SMIL = {
           blobType = 'img';
         }
         id = slide.name;
-        media = '<' + blobType + ' src="' + id + '">';
+        media = '<' + blobType + ' src="' + id + '"/>';
         attachments.push({
           id: '<' + id + '>',
           location: id,
