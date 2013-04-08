@@ -485,7 +485,7 @@ var ThreadUI = {
       var textString = '';
       if (dataArray[i].name && dataArray[i].blob) {
         mediaString = '<img src="' + URL.createObjectURL(dataArray[i].blob) +
-                      '" width="100px"/><br>';
+                      '"/><br>';
       }
       if (dataArray[i].text) {
         textString =
