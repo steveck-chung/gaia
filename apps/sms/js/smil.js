@@ -32,12 +32,13 @@ var SMIL = {
     function findAttachment(name) {
       var index = 0;
       var length = attachments.length;
+
       for (; index < length; index++) {
         if (attachments[index].location === name) {
           return attachments[index];
         }
       }
-      return null;
+      return {content: null};
     }
 
     // handle mms messages without smil
@@ -83,12 +84,15 @@ var SMIL = {
         var mediaElement = par.querySelector('img, video, audio');
         var textElement = par.querySelector('text');
         var slide = slides[index] = {};
+        var textLocation;
         if (mediaElement) {
-          slide.name = mediaElement.getAttribute('src');
+          // some MMS use 'cid:' as a prefix, remove it
+          slide.name = mediaElement.getAttribute('src').replace(/^cid:/, '');
           slide.blob = findAttachment(slide.name).content;
         }
         if (textElement) {
-          readTextBlob(findAttachment(textElement.getAttribute('src')).content,
+          textLocation = textElement.getAttribute('src').replace(/^cid:/, '');
+          readTextBlob(findAttachment(textLocation).content,
             function(event, text) {
               slide.text = text;
               exitPoint();

@@ -94,7 +94,8 @@ var ThreadUI = {
     this.sendButton.addEventListener('click', this.sendMessage.bind(this));
     // Allow for stubbing in environments that do not implement the
     // `navigator.mozSms` API
-    this._mozMobileMessage = navigator.mozMobileMessage || window.MockNavigatormozMobileMessage;
+    this._mozMobileMessage = navigator.mozMobileMessage ||
+                             window.MockNavigatormozMobileMessage;
 
     // Prevent sendbutton to hide the keyboard:
     this.sendButton.addEventListener('mousedown',

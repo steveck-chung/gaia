@@ -160,13 +160,14 @@
   };
 
   // mozSms API
-  MockNavigatormozMobileMessage.addEventListener = function(eventName, handler) {
-    var handlers = allHandlers[eventName];
-    if (!handlers) {
-      handlers = allHandlers[eventName] = [];
-    }
-    handlers.push(handler);
-  };
+  MockNavigatormozMobileMessage.addEventListener =
+    function(eventName, handler) {
+      var handlers = allHandlers[eventName];
+      if (!handlers) {
+        handlers = allHandlers[eventName] = [];
+      }
+      handlers.push(handler);
+    };
 
   MockNavigatormozMobileMessage.send = function(number, text, success, error) {
     var sendId = messagesDb.id++;

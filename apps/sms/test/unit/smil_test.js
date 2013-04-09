@@ -76,6 +76,26 @@ suite('SMIL', function() {
         done();
       });
     });
+    test('SMIL doc with cid: prefixes on src', function(done) {
+      var testText = 'Testing 1 2 3';
+      var message = {
+        smil: '<smil><body><par><img src="cid:example.jpg"/>' +
+              '<text src="cid:text1"/></par></body></smil>',
+        attachments: [{
+          location: 'text1',
+          content: new Blob([testText], {type: 'text/plain'})
+        },{
+          location: 'example.jpg',
+          content: testImageBlob
+        }]
+      };
+      SMIL.parse(message, function(output) {
+        assert.equal(output[0].text, testText);
+        assert.equal(output[0].blob, testImageBlob);
+        assert.equal(output[0].name, 'example.jpg');
+        done();
+      });
+    });
   });
   suite('SMIL.generate', function() {
     test('Text only message', function(done) {
@@ -83,12 +103,15 @@ suite('SMIL', function() {
         text: 'This is a test of the SMIL generate method'
       }];
       var output = SMIL.generate(smilTest);
+      var doc = (new DOMParser())
+                .parseFromString(output.smil, 'application/xml')
+                .documentElement;
 
       // only one attachment
       assert.equal(output.attachments.length, 1);
 
       // only one <par> tag in the smil output
-      assert.equal(output.smil.split('<par').length, 2);
+      assert.equal(doc.getElementsByTagName('par').length, 1);
 
       // check that the content of the text blob is what we said it should be
       var textReader = new FileReader();
@@ -107,14 +130,18 @@ suite('SMIL', function() {
         blob: testImageBlob
       }];
       var output = SMIL.generate(smilTest);
+      var doc = (new DOMParser())
+                .parseFromString(output.smil, 'application/xml')
+                .documentElement;
 
       // two attachments (text and image)
       assert.equal(output.attachments.length, 2);
 
       // only one <par> tag
-      assert.equal(output.smil.split('<par').length, 2);
+      assert.equal(doc.querySelectorAll('par').length, 1);
+
       // the img is before the text
-      assert.ok(/<img.*<text/.exec(output.smil));
+      assert.equal(doc.querySelectorAll('img + text').length, 1);
     });
   });
 });
