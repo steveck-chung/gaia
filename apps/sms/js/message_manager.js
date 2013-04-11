@@ -53,7 +53,7 @@ var MessageManager = {
   onMessageSent: function mm_onMessageSent(e) {
     ThreadUI.onMessageSent(e.message);
   },
-  // This method fills the gap while we wait for next 'getThreadList' request,
+  // This method fills the gap while we wait for next 'getThreads' request,
   // letting us rendering the new thread with a better performance.
   createThreadMockup: function mm_createThreadMockup(message) {
     // Given a message we create a thread as a mockup. This let us render the
@@ -61,7 +61,7 @@ var MessageManager = {
     // reduce Gecko requests.
     return {
         id: message.threadId,
-        senderOrReceiver: message.sender,
+        participants: [message.sender],
         body: message.body,
         timestamp: message.timestamp,
         unreadCount: 1
@@ -269,16 +269,21 @@ var MessageManager = {
   },
 
   getThreads: function mm_getThreads(callback, extraArg) {
-    var request = this._mozMobileMessage.getThreadList();
-    request.onsuccess = function onsuccess(evt) {
-      var threads = evt.target.result;
+    var cursor = this._mozMobileMessage.getThreads(),
+        threads = [];
+    cursor.onsuccess = function onsuccess() {
+      if (this.result) {
+        threads.push(this.result);
+        this.continue();
+        return;
+      }
       if (callback) {
         callback(threads, extraArg);
       }
     };
 
-    request.onerror = function onerror() {
-      var msg = 'Reading the database. Error: ' + request.error.name;
+    cursor.onerror = function onerror() {
+      var msg = 'Reading the database. Error: ' + this.error.name;
       console.log(msg);
     };
   },
@@ -288,18 +293,16 @@ var MessageManager = {
         invert = options.invert, // invert selection
         endCB = options.endCB,   // CB when all messages retrieved
         endCBArgs = options.endCBArgs; //Args for endCB
-    var self = this;
-    var request = this._mozMobileMessage.getMessages(filter, !invert);
-    request.onsuccess = function onsuccess() {
-      var cursor = request.result;
-      if (cursor.message) {
+    var cursor = this._mozMobileMessage.getMessages(filter, !invert);
+    cursor.onsuccess = function onsuccess() {
+      if (!this.done) {
         var shouldContinue = true;
         if (stepCB) {
-          shouldContinue = stepCB(cursor.message);
+          shouldContinue = stepCB(this.result);
         }
         // if stepCB returns false the iteration stops
         if (shouldContinue !== false) { // if this is undefined this is fine
-          cursor.continue();
+          this.continue();
         }
       } else {
         if (endCB) {
@@ -307,8 +310,8 @@ var MessageManager = {
         }
       }
     };
-    request.onerror = function onerror() {
-      var msg = 'Reading the database. Error: ' + request.error.name;
+    cursor.onerror = function onerror() {
+      var msg = 'Reading the database. Error: ' + this.error.name;
       console.log(msg);
     };
   },
