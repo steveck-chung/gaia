@@ -55,7 +55,7 @@ window.addEventListener('load', function() {
     MessageManager.getThreads(ThreadListUI.renderThreads);
     // Fetch mmsSizeLimitation
     Settings.getMmsSizeLimitation(function(size) {
-      if (size && !isNaN(size)) {
+      if (size && !isNaN(size) && size > 0) {
         Settings.mmsSizeLimitation = size;
       }
     });

@@ -4,7 +4,7 @@
 */
 
 var Settings = {
-  mmsSizeLimitation: 0, // default mms message size limitation is unlimited.
+  mmsSizeLimitation: 600 * 1024, // Default mms message size limitation is 600K.
   // Set MMS size limitation:
   // If operator does not specify MMS message size, we leave the decision to
   // MessageManager and return nothing if we can't get size limitation from db.
