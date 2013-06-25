@@ -139,15 +139,17 @@ var Compose = (function() {
         imgNodes.push(node);
       }
     });
-    // Image attachment number < 3
+
+    // Total number of images < 3
     //   => Set max image size to 2/5 message size limitation.
-    // Image attachment number >= 3
+    // Total number of images >= 3
     //   => Set max image size to 1/5 message size limitation.
-    var length = imgNodes.length;
-    var limit = length > 2 ? Settings.mmsSizeLimitation * 0.2 :
-                                     Settings.mmsSizeLimitation * 0.4;
-    if (length === 0)
+    var images = imgNodes.length;
+    var limit = images > 2 ? Settings.mmsSizeLimitation * 0.2 :
+                             Settings.mmsSizeLimitation * 0.4;
+    if (images === 0) {
       return;
+    }
 
     state.resizing = true;
     composeCheck();
@@ -161,7 +163,7 @@ var Compose = (function() {
           dom.message.insertBefore(newNode, node);
           dom.message.removeChild(node);
         }
-        if (++done === length) {
+        if (++done === images) {
           state.resizing = false;
           composeCheck();
         }
