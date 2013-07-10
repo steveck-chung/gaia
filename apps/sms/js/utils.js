@@ -337,7 +337,35 @@
 
           context.drawImage(img, 0, 0, target_width, target_height);
           URL.revokeObjectURL(url);
-          canvas.toBlob(callback, blob.type);
+          // Bug 889765: Since we couldn't know the quality of the original jpg
+          // The 'resized' image might have a bigger size because it was saved
+          // with quality or dpi. Here we will adjust the jpg quality(or resize
+          // the blob again before bug 891884 landed) to make sure the size
+          // won't exceed the limitation.
+          var quality,
+              originalSize;
+
+          function blobAdjustment(resizedblob) {
+            if (resizedblob.size < limit) {
+              callback(resizedblob);
+            } else {
+              // Reduce image quality for match limitation. Here we set quality
+              // to 0.8, 0.6, 0.4, 0.2 and 0 for image blob resizing.
+              // (Default image quality is 0.92)
+              if (!originalSize) {
+                quality = 0.8;
+                originalSize = resizedblob.size;
+                canvas.toBlob(blobAdjustment, 'image/jpeg', quality);
+              } else if (originalSize === resizedblob.size || quality === 0) {
+                // Image qulity will not change before bug 891884 landed.
+                // We will resize the blob instead.
+                Utils.getResizedImgBlob(resizedblob, limit, callback);
+              } else {
+                canvas.toBlob(blobAdjustment, 'image/jpeg', quality -= 0.2);
+              }
+            }
+          }
+          canvas.toBlob(blobAdjustment, blob.type);
         };
       }
     },
