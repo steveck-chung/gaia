@@ -237,37 +237,40 @@ var SMIL = window.SMIL = {
 
       var mediaElements = par.querySelectorAll('img, video, audio');
       var textElement = par.querySelector('text');
-      var slide = {};
-      var attachment;
-      var src;
+      var attachment, src;
 
-      slides.push(slide);
-      if (mediaElements.length > 0) {
-        Array.prototype.forEach.call(mediaElements, function setSlide(element) {
-          src = element.getAttribute('src');
-          attachment = findAttachment(src);
-          if (attachment) {
-            // If the slide contains an audio for background music, we separate
-            // it into next slide.
-            if (element.tagName === 'audio') {
-              var audioSlide = {};
-              audioSlide.name = attachment.location;
-              audioSlide.blob = attachment.content;
-              audioSlide.text = '';
-              slides.push(audioSlide);
-            } else {
-              slide.name = attachment.location;
-              slide.blob = attachment.content;
-            }
-          } else {
-            attachmentsNotFound = true;
-          }
-        });
-      }
+      Array.prototype.forEach.call(mediaElements, function setSlide(element) {
+        src = element.getAttribute('src');
+        attachment = findAttachment(src);
+        if (attachment) {
+          // every media attachment starts its own slide in our format
+          slides.push({
+            name: attachment.location,
+            blob: attachment.content
+          });
+        } else {
+          attachmentsNotFound = true;
+        }
+      });
+
       if (textElement) {
         src = textElement.getAttribute('src');
         attachment = findAttachment(src);
+
         if (attachment) {
+
+          // check for text on the last slide
+          var slide = slides[slides.length - 1];
+
+          // if the last slide doesn't exist, or the last slide has text
+          // already, we create a new slide to store the text
+          if (!slide || slide.text) {
+            slide = {};
+            slides.push(slide);
+          }
+
+          // read the text blob, and store it in the "slide" this function
+          // will hold onto
           readTextBlob(attachment.content,
             function SMIL_parseSMILAttachmentRead(event, text) {
               slide.text = text;
