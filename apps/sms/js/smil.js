@@ -235,22 +235,34 @@ var SMIL = window.SMIL = {
         return;
       }
 
-      var mediaElement = par.querySelector('img, video, audio');
+      var mediaElements = par.querySelectorAll('img, video, audio');
       var textElement = par.querySelector('text');
       var slide = {};
       var attachment;
       var src;
 
       slides.push(slide);
-      if (mediaElement) {
-        src = mediaElement.getAttribute('src');
-        attachment = findAttachment(src);
-        if (attachment) {
-          slide.name = attachment.location;
-          slide.blob = attachment.content;
-        } else {
-          attachmentsNotFound = true;
-        }
+      if (mediaElements.length > 0) {
+        Array.prototype.forEach.call(mediaElements, function setSlide(element) {
+          src = element.getAttribute('src');
+          attachment = findAttachment(src);
+          if (attachment) {
+            // If the slide contains an audio for background music, we separate
+            // it into next slide.
+            if (element.tagName === 'audio') {
+              var audioSlide = {};
+              audioSlide.name = attachment.location;
+              audioSlide.blob = attachment.content;
+              audioSlide.text = '';
+              slides.push(audioSlide);
+            } else {
+              slide.name = attachment.location;
+              slide.blob = attachment.content;
+            }
+          } else {
+            attachmentsNotFound = true;
+          }
+        });
       }
       if (textElement) {
         src = textElement.getAttribute('src');
