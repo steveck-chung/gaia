@@ -589,56 +589,53 @@ suite('Utils', function() {
   });
 
 
-  suite('Utils for MMS user story test', function() {
-    var oversizedBlob,
-        lowQualityBlobArray = [];
+  suite('Utils.getResizedImgBlob', function() {
+    // a list of files in /test/unit/media/ to test resizing on
+    var testData = {
+      'IMG_0554.bmp': null,
+      'IMG_0554.gif': null,
+      'IMG_0554.png': null,
+      'IMG_0554.jpg': null,
+      'IMG_0554_80.jpg': null,
+      'IMG_0554_60.jpg': null,
+      'IMG_0554_40.jpg': null,
+      'IMG_0554_20.jpg': null
+    };
 
     suiteSetup(function(done) {
-      // Create test blob for image resize testing
+      this.timeout(5000);
+      // load test blobs for image resize testing
       var assetsNeeded = 0;
-      function getAsset(filename, loadCallback) {
+      function loadBlob(filename) {
         assetsNeeded++;
 
         var req = new XMLHttpRequest();
-        req.open('GET', filename, true);
+        req.open('GET', '/test/unit/media/' + filename, true);
         req.responseType = 'blob';
+
         req.onload = function() {
-          loadCallback(req.response);
+          testData[filename] = req.response;
           if (--assetsNeeded === 0) {
             done();
           }
         };
         req.send();
       }
-      getAsset('/test/unit/media/IMG_0554.jpg', function(blob) {
-        oversizedBlob = blob;
-      });
-      ['80', '60', '40', '20'].forEach(function(quality) {
-        getAsset('/test/unit/media/IMG_0554_' + quality + '.jpg',
-          function(blob) {
-          lowQualityBlobArray.push(blob);
-        });
-      });
+
+      // load the images
+      Object.keys(testData).forEach(loadBlob);
     });
-    test('Image rescaling to 300kB', function(done) {
-      // Open an oversized image for testing resize ability
-      var limit = 300 * 1024;
-      Utils.getResizedImgBlob(oversizedBlob, limit, function(resizedBlob) {
-        assert.isTrue(resizedBlob.size < limit);
-        done();
-      });
-    });
-    test('Low quality image rescaling', function(done) {
-      // Low quality images testing : Set the limitation to half of the
-      // original size for 4 different quality.
-      var blobs = lowQualityBlobArray.length;
-      lowQualityBlobArray.forEach(function(blob) {
-        var limit = Math.round(blob.size / 2.0);
+
+    Object.keys(testData).forEach(function(filename) {
+      test(filename, function(done) {
+        var blob = testData[filename];
+        // half the image size, or 100k, whichever is smaller
+        var limit = Math.min(100000, Math.round(blob.size / 2));
+
         Utils.getResizedImgBlob(blob, limit, function(resizedBlob) {
-          assert.isTrue(resizedBlob.size < limit);
-          if (--blobs === 0) {
-            done();
-          }
+          assert.isTrue(resizedBlob.size < limit,
+            'resizedBlob is smaller than ' + limit);
+          done();
         });
       });
     });
