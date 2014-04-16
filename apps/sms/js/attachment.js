@@ -70,9 +70,6 @@
         return;
       }
 
-      // The thumbnail format matches the blob format.
-      var type = this.blob.type;
-
       // The container size is set to 80*80px by default (plus border);
       // as soon as the image width and height are known, the container can be
       // extended up to 120px, either horizontally or vertically.
@@ -83,7 +80,6 @@
         type: 'thumbnail'
       });
       img.onload = function onBlobLoaded() {
-        window.URL.revokeObjectURL(img.src);
 
         // compute thumbnail size
         var min = MIN_THUMBNAIL_WIDTH_HEIGHT;
@@ -97,20 +93,10 @@
           height = min;
         }
 
-        // turn this thumbnail into a dataURL
-        var canvas = document.createElement('canvas');
-        var ratio = Math.max(img.width / width, img.height / height);
-        canvas.width = Math.round(img.width / ratio);
-        canvas.height = Math.round(img.height / ratio);
-        var context = canvas.getContext('2d', { willReadFrequently: true });
-        // Using canvas width and height with correct image proportions
-        context.drawImage(img, 0, 0, canvas.width, canvas.height);
-        var data = canvas.toDataURL(type);
-
         callback({
           width: width,
           height: height,
-          data: data
+          data: img.src
         });
       };
       img.onerror = function onBlobError() {
