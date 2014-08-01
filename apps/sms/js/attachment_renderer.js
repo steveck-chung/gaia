@@ -1,4 +1,6 @@
-/*global Promise, Template, Utils*/
+/*global Promise, Template, Utils,
+         ImageUtils
+*/
 
 /* exported AttachmentRenderer */
 
@@ -203,12 +205,9 @@
    */
   AttachmentRenderer.prototype.getThumbnail = function() {
     // The thumbnail format matches the blob format.
-    var type = this._attachment.blob.type,
-        downsamplingUrl = Utils.getDownsamplingSrcUrl({
-          url: window.URL.createObjectURL(this._attachment.blob),
-          size: this._attachment.blob.size,
-          type: 'thumbnail'
-        });
+    var blob = this._attachment.blob,
+        deferred = Utils.Promise.defer(),
+        adjustedData;
 
     var sizeAdjuster = function(width, height) {
       // The container size is set to 80*80px by default (plus border);
@@ -230,16 +229,41 @@
       };
     };
 
-    return Utils.imageUrlToDataUrl(downsamplingUrl, type, sizeAdjuster).
-      catch(function(e) {
-        console.error('Error occurred while retrieving data URL.', e);
+    ImageUtils.getSizeAndType(blob).then(
+      function getSizeResolve(data) {
+        var inputWidth = data.width;
+        var inputHeight = data.height;
+        adjustedData = sizeAdjuster(inputWidth, inputHeight);
 
-        return {
+        return ImageUtils.resizeAndCropToCover(blob,
+          adjustedData.width, adjustedData.height, data.type);
+      },
+      function getSizeReject(error) {
+        console.error('Error occurred while retrieving data URL.', error);
+
+        return ImageUtils.resizeAndCropToCover(blob,
+          MIN_THUMBNAIL_WIDTH_HEIGHT, MIN_THUMBNAIL_WIDTH_HEIGHT, blob.type);
+      }
+    ).then(
+      function resizeResolve(resizedBlob) {
+        deferred.resolve({
+          width: adjustedData.width,
+          height: adjustedData.height,
+          dataUrl: window.URL.createObjectURL(resizedBlob)
+        });
+      },
+      function resizeReject(error) {
+        console.error('Error occurred while retrieving data URL.', error);
+
+        deferred.resolve({
           width: MIN_THUMBNAIL_WIDTH_HEIGHT,
           height: MIN_THUMBNAIL_WIDTH_HEIGHT,
           error: true
-        };
-      });
+        });
+      }
+    );
+
+    return deferred.promise;
   };
 
   /**
