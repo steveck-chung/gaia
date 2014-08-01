@@ -1,18 +1,17 @@
-/*global Promise, Template, Utils*/
+/*global Promise, Template, Utils,
+         ImageUtils
+*/
 
 /* exported AttachmentRenderer */
 
 (function(exports) {
   'use strict';
-
-  // thumbnails should be 80*80px (plus border) but can be extended up to 120px,
-  // either horizontally or vertically
-  const MIN_THUMBNAIL_WIDTH_HEIGHT = 80;  // min =  80px
-  const MAX_THUMBNAIL_WIDTH_HEIGHT = 120; // max = 120px
-
   // do not create thumbnails for too big attachments
   // (see bug 805114 for a similar issue in Gallery)
   const MAX_THUMBNAIL_GENERATION_SIZE = 1.5 * 1024 * 1024; // 1.5MB
+
+  // Actual thumbnails size should be 10 rem (100px) * devicePixelRatio
+  const THUMBNAIL_SZIE = 100 * window.devicePixelRatio;
 
   /**
    * A <div> container suits most of the cases where we want to display an
@@ -154,27 +153,11 @@
     var thumbnailPromise = this._attachment.type === 'img' &&
       this._attachment.size < MAX_THUMBNAIL_GENERATION_SIZE ?
         this.getThumbnail() : Promise.resolve();
+    var baseMarkup;
 
-    return thumbnailPromise.then(function(thumbnail) {
-      // TODO: consider using rejected promise instead of "error" field.
-      var hasThumbnail = thumbnail && thumbnail.dataUrl && !thumbnail.error;
-
-      // TODO: we need to revise it some day, it looks ugly
-      if (hasThumbnail) {
-        var borderWidth = 2; // px
-        attachmentContainer.style.width =
-          (thumbnail.width + 2 * borderWidth) + 'px';
-        attachmentContainer.style.height =
-          (thumbnail.height + 2 * borderWidth) + 'px';
-      }
-
-      var previewClass = hasThumbnail ? 'preview' : 'nopreview';
-
-      var baseMarkup = this._getBaseMarkup(
-        'attachment-' + previewClass + '-tmpl',
-        thumbnail && !!thumbnail.error
-      );
-
+    return thumbnailPromise.then(function(url) {
+      var previewClass = url ? 'preview' : 'nopreview';
+      baseMarkup = this._getBaseMarkup('attachment-' + previewClass + '-tmpl');
       attachmentContainer.classList.add(previewClass);
 
       return this._renderer.renderTo(baseMarkup, attachmentContainer).
@@ -183,13 +166,21 @@
           // attachment container is an iframe and content container is "body"
           // element inside iframe), preview class should be applied to both to
           // have effect.
+          var thumbnailNode = contentContainer.querySelector('.thumbnail');
           contentContainer.classList.add(previewClass);
 
-          var thumbnailNode = contentContainer.querySelector('.thumbnail');
-          if (thumbnailNode && hasThumbnail) {
+          if (thumbnailNode && url) {
             thumbnailNode.style.backgroundImage =
-              'url("' + encodeURI(thumbnail.dataUrl) + '")';
+              'url("' + url + '")';
           }
+        });
+    }.bind(this)).catch(function(error) {
+      baseMarkup = this._getBaseMarkup('attachment-nopreview-tmpl', true);
+      attachmentContainer.classList.add('nopreview');
+
+      return this._renderer.renderTo(baseMarkup, attachmentContainer).
+        then(function(contentContainer) {
+          contentContainer.classList.add('nopreview');
         });
     }.bind(this));
   };
@@ -203,43 +194,25 @@
    */
   AttachmentRenderer.prototype.getThumbnail = function() {
     // The thumbnail format matches the blob format.
-    var type = this._attachment.blob.type,
-        downsamplingUrl = Utils.getDownsamplingSrcUrl({
-          url: window.URL.createObjectURL(this._attachment.blob),
-          size: this._attachment.blob.size,
-          type: 'thumbnail'
-        });
+    var blob = this._attachment.blob,
+        deferred = Utils.Promise.defer();
 
-    var sizeAdjuster = function(width, height) {
-      // The container size is set to 80*80px by default (plus border);
-      // as soon as the image width and height are known, the container can be
-      // extended up to 120px, either horizontally or vertically.
-      var min = MIN_THUMBNAIL_WIDTH_HEIGHT;
-      var max = MAX_THUMBNAIL_WIDTH_HEIGHT;
+    ImageUtils.getSizeAndType(blob).then(
+      function getSizeResolve(data) {
+        var inputWidth = data.width;
+        var inputHeight = data.height;
+        var scale;
+        var fragment;
 
-      if (width < height) {
-        return {
-          width: min,
-          height: Math.min(height / width * min, max)
-        };
-      }
+        scale = THUMBNAIL_SZIE / Math.min(inputWidth, inputHeight);
+        fragment = ImageUtils.Downsample.sizeNoMoreThan(scale);
 
-      return {
-        width: Math.min(width / height * min, max),
-        height: min
-      };
-    };
+        deferred.resolve(window.URL.createObjectURL(blob) + fragment);
+      },
+      deferred.reject
+    );
 
-    return Utils.imageUrlToDataUrl(downsamplingUrl, type, sizeAdjuster).
-      catch(function(e) {
-        console.error('Error occurred while retrieving data URL.', e);
-
-        return {
-          width: MIN_THUMBNAIL_WIDTH_HEIGHT,
-          height: MIN_THUMBNAIL_WIDTH_HEIGHT,
-          error: true
-        };
-      });
+    return deferred.promise;
   };
 
   /**

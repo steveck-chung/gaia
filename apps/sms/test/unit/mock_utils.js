@@ -9,9 +9,6 @@ var MockUtils = {
   camelCase: Utils.camelCase,
   date: Utils.date,
   extend: Utils.extend,
-  getFontSize: function() {
-    return 12;
-  },
   getDayDate: Utils.getDayDate,
   getHeaderDate: Utils.getHeaderDate,
   getFormattedHour: Utils.getFormattedHour,

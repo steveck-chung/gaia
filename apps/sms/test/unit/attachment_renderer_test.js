@@ -9,6 +9,7 @@ requireApp('sms/js/attachment.js');
 requireApp('sms/js/attachment_renderer.js');
 requireApp('sms/js/utils.js');
 
+require('/shared/js/image_utils.js');
 require('/shared/test/unit/mocks/mock_l10n.js');
 requireApp('sms/test/unit/mock_utils.js');
 
@@ -31,7 +32,7 @@ suite('AttachmentRenderer >', function() {
     assert.isNull(el.querySelector('div.placeholder'));
     var thumbnail = el.querySelector('div.thumbnail');
     assert.ok(thumbnail);
-    assert.include(thumbnail.style.backgroundImage, 'data:image');
+    assert.include(thumbnail.style.backgroundImage, 'blob:');
   }
 
   function assertThumbnailPlaceholder(el, type) {
@@ -113,25 +114,6 @@ suite('AttachmentRenderer >', function() {
         // broken image => no thumbnail and `corrupted' class
         assertThumbnailPlaceholder(attachmentContainer, 'img');
         assert.ok(attachmentContainer.querySelector('div.corrupted'));
-      }).then(done, done);
-    });
-
-    test('encodes thumbnail URL', function(done) {
-      this.sinon.spy(window, 'encodeURI');
-
-      var attachment = new Attachment(testImageBlob_small, {
-        name: 'Image attachment'
-      });
-
-      var attachmentRenderer = AttachmentRenderer.for(attachment);
-
-      // Loading thumbnail in parallel only to verify later that render method
-      // actually encodes exact the same thumbnail URL.
-      Promise.all([
-        attachmentRenderer.getThumbnail(),
-        attachmentRenderer.render()
-      ]).then((results) => {
-        sinon.assert.calledWith(encodeURI, results[0].dataUrl);
       }).then(done, done);
     });
 
