@@ -1,6 +1,5 @@
 /*global Utils, Template, Threads, ThreadUI, MessageManager, ContactRenderer,
-         Contacts, Settings, Navigation,
-         ActivityHandler
+         Contacts, Settings, Navigation
  */
 
 /*exported Information */
@@ -38,7 +37,7 @@ var TMPL = function createTemplate(tmpls) {
  The 1st level properties represents delivery status and 2nd level properties
  represents read status.
  */
-var REPORT_MAP = {
+const REPORT_MAP = {
   'not-applicable': {
     'not-applicable': 'not-applicable',
     'pending' : 'pending',
@@ -66,7 +65,7 @@ var REPORT_MAP = {
 };
 
 // Register the message events we wanted for report view refresh
-var MESSAGE_EVENTS = [
+const MESSAGE_EVENTS = [
   'message-failed-to-send',
   'message-delivered',
   'message-read',
@@ -260,6 +259,10 @@ var VIEWS = {
       var setL10nAttributes = navigator.mozL10n.setAttributes;
       var request = MessageManager.getMessage(this.id);
 
+      // Hide these dynamic fields to avoid incorrect info displayed at first
+      this.subject.classList.add('hide');
+      this.sizeBlock.classList.add('hide');
+
       request.onsuccess = (function() {
         var message = request.result;
         var type = message.type;
@@ -270,8 +273,6 @@ var VIEWS = {
         // Fill in the description/status/size
         if (type === 'sms') {
           setL10nAttributes(this.type, 'message-type-sms');
-          this.subject.classList.add('hide');
-          this.sizeBlock.classList.add('hide');
         } else { //mms
           setL10nAttributes(this.type, 'message-type-mms');
           // subject text content
@@ -287,8 +288,6 @@ var VIEWS = {
             var params = sizeL10nParam(message.attachments);
             setL10nAttributes(this.size, params.l10nId, params.l10nArgs);
             this.sizeBlock.classList.remove('hide');
-          } else {
-            this.sizeBlock.classList.add('hide');
           }
         }
         this.container.dataset.delivery = message.delivery;
@@ -306,11 +305,11 @@ var VIEWS = {
         );
 
         if (isIncoming) {
-          l10nContainsDateSetup(this.receivedTimeStamp, message.timestamp);
-          l10nContainsDateSetup(this.sentTimeStamp, message.sentTimestamp);
+          l10nContainsDateSetup(this.receivedTimestamp, message.timestamp);
+          l10nContainsDateSetup(this.sentTimestamp, message.sentTimestamp);
           setL10nAttributes(this.sentTitle, 'message-sent');
         } else {
-          l10nContainsDateSetup(this.sentTimeStamp, message.timestamp);
+          l10nContainsDateSetup(this.sentTimestamp, message.timestamp);
           setL10nAttributes(this.sentTitle, 'message-' + message.delivery);
         }
 
@@ -326,17 +325,23 @@ var VIEWS = {
       ThreadUI.setHeaderAction('close');
     },
 
+    // Set this flag to true only when resend is triggered.
+    messageResending: false,
+
     setEventListener: function report_setEventListener() {
-      this.resendBtn.addEventListener('click', function() {
+      this.resendBtn.addEventListener('click', () => {
+        this.messageResending = true;
         ThreadUI.resendMessage(this.id);
-      }.bind(this));
+      });
     },
 
     onStatusChanged: function report_onStatusChanged(e) {
-      // If we got sending status change in report view after resend clicked,
-      // we should change report panel id and refresh for new message report.
-      if (e.message.delivery === 'sending' && !ActivityHandler.isInActivity()) {
-        this.id = e.message.id;  
+      // If we got sending status change in report view after resend clicked
+      // (messageResending is true), we should change report panel id, reset
+      // messageResending flag and refresh for new message report.
+      if (e.message.delivery === 'sending' && this.messageResending) {
+        this.id = e.message.id;
+        this.messageResending = false;
       }
 
       if (Navigation.isCurrentPanel('report-view', { id: e.message.id }) ||
@@ -347,7 +352,7 @@ var VIEWS = {
     },
 
     elements: ['contact-list', 'size', 'size-block', 'type', 'sent-title',
-      'sent-timeStamp', 'received-timeStamp', 'subject', 'sim-info',
+      'sent-timestamp', 'received-timestamp', 'subject', 'sim-info',
       'contact-title', 'resend-btn'
     ]
   }
@@ -443,7 +448,7 @@ Information.prototype = {
     this.isRendering = true;
     length = participants.length;
     ul.textContent = '';
-    participants.forEach(function(participant) {
+    participants.forEach((participant) => {
       var number, infoBlock, selector;
 
       if (typeof participant === 'object') {
@@ -479,7 +484,7 @@ Information.prototype = {
 
         exitPoint.apply(this);
       });
-    }.bind(this));
+    });
   }
 };
 

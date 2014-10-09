@@ -2,7 +2,6 @@
          ThreadUI, MessageManager, ContactRenderer, Utils, Template, Threads,
          MockMessages, Settings, Navigation,
          AssetsHelper,
-         ActivityHandler,
          Contacts
 */
 
@@ -21,12 +20,10 @@ require('/test/unit/mock_navigation.js');
 require('/test/unit/mock_settings.js');
 require('/test/unit/mock_message_manager.js');
 require('/test/unit/mock_contact_renderer.js');
-require('/test/unit/mock_activity_handler.js');
 require('/js/information.js');
 
 
 var mocksHelperForInformation = new MocksHelper([
-  'ActivityHandler',
   'Contacts',
   'ContactRenderer',
   'MessageManager',
@@ -216,6 +213,7 @@ suite('Information view', function() {
 
   suite('Message report view render', function() {
     var messageOpts = {};
+    var deliveryStatuses = ['not-applicable', 'pending', 'success', 'error'];
 
     setup(function() {
       reportView = new Information('report');
@@ -251,10 +249,14 @@ suite('Information view', function() {
       reportView.afterLeave();
     });
 
-    function genearlInfoAssertion(opts) {
+    function getInfoBlock(renderContactList) {
+      return renderContactList.args[0][0][0].infoBlock;
+    }
+
+    function generalInfoAssertion(opts) {
       var type = opts.type,
           delivery = opts.delivery,
-          subjuectHide = opts.subjuectHide,
+          subjectHide = opts.subjectHide,
           subjectContent = opts.subjectContent,
           sentTitle = opts.sentTitle,
           contactTitle = opts.contactTitle,
@@ -268,8 +270,8 @@ suite('Information view', function() {
         type
       );
 
-      assert.equal(reportView.subject.classList.contains('hide'), subjuectHide);
-      if (!subjuectHide && subjectContent) {
+      assert.equal(reportView.subject.classList.contains('hide'), subjectHide);
+      if (!subjectHide && subjectContent) {
         assert.equal(reportView.subject.querySelector('.detail').textContent,
                      subjectContent);        
       }
@@ -308,10 +310,10 @@ suite('Information view', function() {
       reportView.id = 1;
       reportView.render();
 
-      genearlInfoAssertion({
+      generalInfoAssertion({
         type: 'message-type-sms',
         delivery: 'sending',
-        subjuectHide: true,
+        subjectHide: true,
         sentTitle: 'message-sending',
         contactTitle: 'report-to-title',
         sizeHide: true
@@ -329,10 +331,10 @@ suite('Information view', function() {
       reportView.id = 1;
       reportView.render();
 
-      genearlInfoAssertion({
+      generalInfoAssertion({
         type: 'message-type-sms',
         delivery: 'sent',
-        subjuectHide: true,
+        subjectHide: true,
         sentTitle: 'message-sent',
         contactTitle: 'report-to-title',
         sizeHide: true
@@ -349,10 +351,10 @@ suite('Information view', function() {
       reportView.id = 1;
       reportView.render();
 
-      genearlInfoAssertion({
+      generalInfoAssertion({
         type: 'message-type-sms',
         delivery: 'error',
-        subjuectHide: true,
+        subjectHide: true,
         sentTitle: 'message-error',
         contactTitle: 'report-to-title',
         sizeHide: true
@@ -372,10 +374,10 @@ suite('Information view', function() {
       reportView.id = 2;
       reportView.render();
 
-      genearlInfoAssertion({
+      generalInfoAssertion({
         type: 'message-type-mms',
         delivery: 'sent',
-        subjuectHide: false,
+        subjectHide: false,
         subjectContent: messageOpts.subject,
         sentTitle: 'message-sent',
         contactTitle: 'report-to-title',
@@ -395,10 +397,10 @@ suite('Information view', function() {
       reportView.id = 2;
       reportView.render();
 
-      genearlInfoAssertion({
+      generalInfoAssertion({
         type: 'message-type-mms',
         delivery: 'sent',
-        subjuectHide: true,
+        subjectHide: true,
         sentTitle: 'message-sent',
         contactTitle: 'report-to-title',
         sizeHide: false,
@@ -413,10 +415,10 @@ suite('Information view', function() {
       reportView.id = 1;
       reportView.render();
 
-      genearlInfoAssertion({
+      generalInfoAssertion({
         type: 'message-type-sms',
         delivery: 'received',
-        subjuectHide: true,
+        subjectHide: true,
         sentTitle: 'message-sent',
         contactTitle: 'report-from-title',
         sizeHide: true
@@ -432,10 +434,10 @@ suite('Information view', function() {
       reportView.id = 2;
       reportView.render();
 
-      genearlInfoAssertion({
+      generalInfoAssertion({
         type: 'message-type-mms',
         delivery: 'received',
-        subjuectHide: false,
+        subjectHide: false,
         subjectContent: messageOpts.subject,
         sentTitle: 'message-sent',
         contactTitle: 'report-from-title',
@@ -453,10 +455,10 @@ suite('Information view', function() {
       reportView.id = 2;
       reportView.render();
 
-      genearlInfoAssertion({
+      generalInfoAssertion({
         type: 'message-type-mms',
         delivery: 'not-downloaded',
-        subjuectHide: true,
+        subjectHide: true,
         sentTitle: 'message-sent',
         contactTitle: 'report-from-title',
         sizeHide: true
@@ -481,7 +483,7 @@ suite('Information view', function() {
           reportView.render();
 
           var sentTimestampNode = reportView.container.querySelector(
-            '.sent-timeStamp'
+            '.sent-timestamp'
           );
 
           assert.isFalse(
@@ -656,7 +658,7 @@ suite('Information view', function() {
         reportView.id = 1;
         reportView.render();
 
-        reportDiv = reportView.renderContactList.args[0][0][0].infoBlock;
+        reportDiv = getInfoBlock(reportView.renderContactList);
         assert.equal(reportDiv.dataset.deliveryStatus, 'not-applicable');
       });
 
@@ -672,7 +674,7 @@ suite('Information view', function() {
 
         data.titleL10n = 'message-status-pending';
         sinon.assert.calledWith(Template.prototype.interpolate, data);
-        reportDiv = reportView.renderContactList.args[0][0][0].infoBlock;
+        reportDiv = getInfoBlock(reportView.renderContactList);
         assert.equal(reportDiv.dataset.deliveryStatus, 'pending');
       });
 
@@ -703,7 +705,7 @@ suite('Information view', function() {
             );
             data.timestamp = '' + messageOpts.deliveryTimestamp;
             sinon.assert.calledWith(Template.prototype.interpolate, data);
-            reportDiv = reportView.renderContactList.args[0][0][0].infoBlock;
+            reportDiv = getInfoBlock(reportView.renderContactList);
             assert.equal(reportDiv.dataset.deliveryStatus, 'delivered');
           });
         });
@@ -720,7 +722,7 @@ suite('Information view', function() {
         reportView.render();
         data.titleL10n = 'message-status-error';
         sinon.assert.calledWith(Template.prototype.interpolate, data);
-        reportDiv = reportView.renderContactList.args[0][0][0].infoBlock;
+        reportDiv = getInfoBlock(reportView.renderContactList);
         assert.equal(reportDiv.dataset.deliveryStatus, 'error');
       });
     });
@@ -752,15 +754,16 @@ suite('Information view', function() {
           reportView.id = 2;
         });
 
-        ['not-applicable', 'pending', 'success', 'error'].forEach((delivery) =>{
+        deliveryStatuses.forEach((delivery) => {
           test('when delivery status is ' + delivery, function() {
             var deliveryInfo = messageOpts.deliveryInfo[0];
             deliveryInfo.deliveryStatus = delivery;
-            deliveryInfo.deliveryTimestamp =
-              delivery === 'success' ? Date.now(): null;
+            deliveryInfo.deliveryTimestamp = delivery === 'success' ?
+               Date.now():
+               null;
             reportView.render();
 
-            block = reportView.renderContactList.args[0][0][0].infoBlock;
+            block = getInfoBlock(reportView.renderContactList);
             switch (delivery) {
               case 'not-applicable':
                 assert.equal(block.dataset.deliveryStatus, 'not-applicable');
@@ -797,7 +800,7 @@ suite('Information view', function() {
           reportView.id = 2;
         });
 
-        ['not-applicable', 'pending', 'success', 'error'].forEach((delivery) =>{
+        deliveryStatuses.forEach((delivery) => {
           test('when delivery status is ' + delivery, function() {
             var deliveryInfo = messageOpts.deliveryInfo[0];
             deliveryInfo.deliveryStatus = delivery;
@@ -805,7 +808,7 @@ suite('Information view', function() {
               delivery === 'success' ? Date.now(): null;
             reportView.render();
 
-            block = reportView.renderContactList.args[0][0][0].infoBlock;
+            block = getInfoBlock(reportView.renderContactList);
             switch (delivery) {
               case 'not-applicable':
                 assert.equal(block.dataset.deliveryStatus, 'pending');
@@ -859,7 +862,7 @@ suite('Information view', function() {
                 delivery === 'success' ? Date.now() - 10: null;
               reportView.render();
 
-              block = reportView.renderContactList.args[0][0][0].infoBlock;
+              block = getInfoBlock(reportView.renderContactList);
               data.titleL10n = 'message-status-read';
               data.timestamp = '' + deliveryInfo.deliveryTimestamp;
               data.reportDateL10n = Utils.date.format.localeFormat(
@@ -888,7 +891,7 @@ suite('Information view', function() {
           reportView.id = 2;
         });
 
-        ['not-applicable', 'pending', 'success', 'error'].forEach((delivery) =>{
+        deliveryStatuses.forEach((delivery) => {
           test('when delivery status is ' + delivery, function() {
             var deliveryInfo = messageOpts.deliveryInfo[0];
             deliveryInfo.deliveryStatus = delivery;
@@ -896,7 +899,7 @@ suite('Information view', function() {
               delivery === 'success' ? Date.now(): null;
             reportView.render();
 
-            block = reportView.renderContactList.args[0][0][0].infoBlock;
+            block = getInfoBlock(reportView.renderContactList);
             data.titleL10n = 'message-status-error';
             assert.equal(block.dataset.deliveryStatus, 'error');
             sinon.assert.calledWith(Template.prototype.interpolate, data);
@@ -917,8 +920,11 @@ suite('Information view', function() {
         setup(function() {
           this.sinon.stub(reportView, 'refresh');
           this.sinon.stub(Navigation, 'isCurrentPanel').returns(false);
-          this.sinon.stub(ActivityHandler, 'isInActivity').returns(false);
           fakeMessage = MockMessages.sms();
+        });
+
+        teardown(function() {
+          reportView.messageResending = false;
         });
 
         test('If showing this message, report is refreshed', function() {
@@ -931,24 +937,26 @@ suite('Information view', function() {
         });
 
         if (event === 'message-sending') {
-          test('If showing another message but not in activity, ' +
+          test('If showing another message by resend button clicked, ' +
             'report is refreshed because of resend', function() {
             Navigation.isCurrentPanel
               .withArgs('report-view').returns(true);
 
             fakeMessage.delivery = 'sending';
+            reportView.messageResending = true;
             MessageManager.on.withArgs(event).yield({ message: fakeMessage });
 
             sinon.assert.called(reportView.refresh);
+            assert.isFalse(reportView.messageResending);
           });
 
-          test('If showing another message and in activity, ' +
+          test('If showing another message but not related to resend button, ' +
             'report is not refreshed', function() {
             Navigation.isCurrentPanel
               .withArgs('report-view', { id: 2 }).returns(true);
 
             fakeMessage.delivery = 'sending';
-            ActivityHandler.isInActivity.returns(true);
+            reportView.messageResending = false;
             MessageManager.on.withArgs(event).yield({ message: fakeMessage });
 
             sinon.assert.notCalled(reportView.refresh);
@@ -990,6 +998,7 @@ suite('Information view', function() {
       test('ThreadUI resend function called', function() {
         reportView.resendBtn.click();
         sinon.assert.calledWith(ThreadUI.resendMessage, reportView.id);
+        assert.isTrue(reportView.messageResending);
       });
     });
   });

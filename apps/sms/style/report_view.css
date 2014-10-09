@@ -41,7 +41,7 @@
 /* Default layout (sent message) */
 .report-view .received-block,
 .report-view[data-delivery="error"] .sent-title,
-.report-view[data-delivery="sending"] .sent-timeStamp {
+.report-view[data-delivery="sending"] .sent-timestamp {
   display: none;
 }
 
@@ -86,7 +86,7 @@
   height: auto;
 }
 
-.report-view > .contact-list > li:first-child {
+.report-view > .contact-list > :first-child {
   border-top: solid 0.1rem #e7e7e7;
 }
 
@@ -96,7 +96,7 @@
   line-height: 1.4rem;
 }
 
-.report-view > ul.contact-list p.name {
+.report-view > .contact-list .name {
   padding-top: 0;
 
   font-size: 1.8rem;
@@ -104,7 +104,7 @@
   line-height: 2.0rem;
 }
 
-.report-view > .contact-list p.number,
+.report-view > .contact-list .number,
 .report-view > .contact-list div {
   padding-top: 1.2rem;
 }
@@ -113,7 +113,7 @@
   color: #008787;
 }
 
-.report-view > .contact-list div .icon {
+.report-view > .contact-list .icon {
   float: left;
 
   width: 1.6rem;
@@ -123,22 +123,22 @@
   background: no-repeat center center / 1.6rem transparent;
 }
 
-.contact-list div[data-delivery-status="delivered"] .icon {
+.contact-list [data-delivery-status="delivered"] .icon {
   background-image: url('images/icons/deliveredtick.png');
 }
 
-.contact-list div[data-delivery-status="read"] .icon {
+.contact-list [data-delivery-status="read"] .icon {
   background-image: url('images/icons/message_read.png');
 }
 
-.contact-list div[data-delivery-status="error"] .icon {
+.contact-list [data-delivery-status="error"] .icon {
   background-image: url('images/icons/exclamation.png');
 }
 
-.contact-list div[data-delivery-status="not-applicable"],
-.contact-list div[data-delivery-status="pending"] .icon,
-.contact-list div[data-delivery-status="pending"] .timestamp,
-.contact-list div[data-delivery-status="error"] .timestamp {
+.contact-list [data-delivery-status="not-applicable"],
+.contact-list [data-delivery-status="pending"] .icon,
+.contact-list [data-delivery-status="pending"] .timestamp,
+.contact-list [data-delivery-status="error"] .timestamp {
   display: none;
 }
 
