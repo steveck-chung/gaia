@@ -89,8 +89,10 @@
 
 .report-view > .contact-list p,
 .report-view > .contact-list span {
+  margin-bottom: -0.3rem;
+
   font-size: 1.4rem;
-  line-height: 1.6rem;
+  line-height: 2.5rem;
 }
 
 .report-view > .contact-list .name {
@@ -121,10 +123,6 @@
 .report-view .network-status,
 .report-view .network-status span {
   line-height: 1.4rem;
-}
-
-.contact-list p.number .phone-carrier {
-  color: #008787;
 }
 
 .report-view > .contact-list .icon {

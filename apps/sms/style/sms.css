@@ -254,6 +254,15 @@ form[role="dialog"][data-type="edit"] .bb-tablist > li {
   pointer-events: none;
 }
 
+/**
+ * TODO: It's an adjustment for line-height/padding to prevent bottom of chars
+ * been cut. This fix will be moved to shared list.css once Bug 1144588 landed
+ */
+[data-type="list"] li p.threadlist-item-title {
+  line-height: 3.2rem;
+  padding-top: 0.2rem;
+}
+
 [data-type="list"] .summary {
   display: flex;
 }
@@ -861,8 +870,17 @@ Do not remove.
  * been cut. This fix will be moved to shared list.css once Bug 1144588 landed
  */
 .contact-list .suggestion > .name {
-  line-height: 2.4rem;
-  padding-top: 0.8rem;
+  line-height: 3.2rem;
+  padding-top: 0.2rem;
+}
+
+.contact-list .suggestion > .number {
+  line-height: 2.7rem;
+  margin-top: -0.5rem;
+}
+
+.contact-list p.number .phone-carrier {
+  color: #008787;
 }
 
 form[role="dialog"][data-type="action"].contact-prompt > header {
