@@ -1,9 +1,18 @@
 /*global asyncStorage,
          InterInstanceEventDispatcher,
-         Utils
+         Utils,
+         bridge,
+         Drafts,
+         Draft
 */
+
+importScripts('../../../lib/threads/bridge.js');
+importScripts('../../../views/shared/js/utils.js');
+importScripts('../../../shared/js/async_storage.js');
+
 (function(exports) {
   'use strict';
+
   var draftIndex = new Map();
   var deferredDraftRequest = null;
 
@@ -212,4 +221,21 @@
   }
 
   exports.Draft = Draft;
+
+  bridge.service('test-drafts')
+    .method('getAll', (force) => Drafts.request(force).then(() => {
+      var drafts = {
+        thread: new Map(),
+        threadless: new Map()
+      };
+
+      for (var draft of Drafts.getAll()) {
+        if (draft.threadId) {
+          drafts.thread.set(draft.threadId, draft);
+        } else {
+          drafts.threadless.set(draft.id, draft);
+        }
+      }
+      return drafts;    
+    }));
 }(this));

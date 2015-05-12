@@ -19,3 +19,4 @@ shared/js/simple_phone_matcher.js
 shared/js/tag_visibility_monitor.js
 shared/js/visibility_monitor.js
 shared/resources/apn/query.js
+apps/sms/lib/threads/bridge.js

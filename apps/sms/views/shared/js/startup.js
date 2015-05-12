@@ -5,7 +5,7 @@
 
 /*global ActivityHandler, ConversationView, InboxView, MessageManager,
          Settings, LazyLoader, TimeHeaders, Information, SilentSms,
-         App, Navigation, EventDispatcher, LocalizationHelper,
+         App, Navigation, EventDispatcher, LocalizationHelper, bridge,
          InterInstanceEventDispatcher
 */
 
@@ -127,5 +127,12 @@ var Startup = {
     window.addEventListener('DOMContentLoaded', loaded);
   }
 };
+
+bridge.manager({
+  'test-drafts': {
+    src: 'services/js/drafts.js',
+    type: 'worker'
+  }
+});
 
 EventDispatcher.mixin(Startup).init();

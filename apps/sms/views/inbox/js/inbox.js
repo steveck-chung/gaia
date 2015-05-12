@@ -3,12 +3,13 @@
 
 /*global Template, Utils, Threads, Contacts, Threads,
          WaitingScreen, MessageManager, TimeHeaders,
-         Drafts, Thread, OptionMenu, ActivityPicker,
+         Thread, OptionMenu, ActivityPicker,
          StickyHeader, Navigation,
          InterInstanceEventDispatcher,
          SelectionHandler,
          Settings,
-         LazyLoader
+         LazyLoader,
+         bridge
 */
 /*exported InboxView */
 (function(exports) {
@@ -41,6 +42,7 @@ var InboxView = {
   inEditMode: false,
 
   init: function inbox_init() {
+    this.draftClient = bridge.client('test-drafts');
     this.tmpl = {
       thread: Template('messages-thread-tmpl')
     };
@@ -146,7 +148,7 @@ var InboxView = {
     var draftId = node.dataset.draftId;
 
     var threadOrDraft = draftId ?
-      Drafts.byDraftId(+draftId) : Threads.get(threadId);
+      this.draftCache.threadless.get(+draftId) : Threads.get(threadId);
 
     if (!threadOrDraft) {
       throw new Error('Thread node is invalid!');
@@ -568,24 +570,25 @@ var InboxView = {
   renderDrafts: function inbox_renderDrafts(force) {
     // Request and render all threads with drafts
     // or thread-less drafts.
-    return Drafts.request(force).then(() => {
-      for (var draft of Drafts.getAll()) {
-        if (draft.threadId) {
-          // Find draft-containing threads that have already been rendered
-          // and update them so they mark themselves appropriately
-          if (document.getElementById(`thread-${draft.threadId}`)) {
-            this.updateThread(Threads.get(draft.threadId));
-          }
-        } else {
-          // Safely assume there is a threadless draft
-          this.setEmpty(false);
+    return this.draftClient.method('getAll', force).then((drafts) => {
+      this.draftCache = drafts;
+      for (var [threadId,] of this.draftCache.thread) {
+        // Find draft-containing threads that have already been rendered
+        // and update them so they mark themselves appropriately
+        if (document.getElementById(`thread-${threadId}`)) {
+          this.updateThread(Threads.get(threadId));
+        }
+      }
 
-          // Render draft only in case we haven't rendered it yet.
-          if (!Threads.has(draft.id)) {
-            var thread = Thread.create(draft);
-            Threads.set(draft.id, thread);
-            this.appendThread(thread);
-          }
+      for (var [id, draft] of this.draftCache.threadless) {
+        // Safely assume there is a threadless draft
+        this.setEmpty(false);
+
+        // Render draft only in case we haven't rendered it yet.
+        if (!Threads.has(id)) {
+          var thread = Thread.create(draft);
+          Threads.set(draft.id, thread);
+          this.appendThread(thread);
         }
       }
 
@@ -595,7 +598,7 @@ var InboxView = {
 
   prepareRendering: function inbox_prepareRendering() {
     this.container.innerHTML = '';
-    this.renderDrafts();
+    return this.renderDrafts();
   },
 
   startRendering: function inbox_startRenderingThreads() {
@@ -623,8 +626,6 @@ var InboxView = {
 
     var hasThreads = false;
     var firstPanelCount = this.FIRST_PANEL_THREAD_COUNT;
-
-    this.prepareRendering();
 
     var firstViewDone = function firstViewDone() {
       this.initStickyHeader();
@@ -658,7 +659,9 @@ var InboxView = {
 
       /* We set the view as empty only if there's no threads and no drafts,
        * this is done to prevent races between renering threads and drafts. */
-      this.finalizeRendering(!(hasThreads || Drafts.size));
+      var hasDraft =
+        this.draftCache.thread.size + this.draftCache.threadless.size;
+      this.finalizeRendering(!(hasThreads || hasDraft));
 
       if (firstPanelCount > 0) {
         // dispatch visuallyLoaded and contentInteractive when rendering
@@ -676,10 +679,12 @@ var InboxView = {
       this.ensureReadAheadSetting();
     }
 
-    MessageManager.getThreads({
-      each: onRenderThread.bind(this),
-      end: onThreadsRendered.bind(this),
-      done: onDone.bind(this)
+    this.prepareRendering().then(() => {
+      MessageManager.getThreads({
+        each: onRenderThread.bind(this),
+        end: onThreadsRendered.bind(this),
+        done: onDone.bind(this)
+      });
     });
 
     return this.readyDeferred.promise;
@@ -701,7 +706,9 @@ var InboxView = {
     var isDraft = thread.isDraft;
 
     // A an existing conversation has draft.
-    var draft = thread.getDraft();
+    var draft = isDraft ?
+      this.draftCache.threadless.get(id) :
+      this.draftCache.thread.get(id);
 
     if (!isDraft && draft) {
       timestamp = Math.max(draft.timestamp, timestamp);
@@ -862,7 +869,7 @@ var InboxView = {
     }
 
     var timestamp = +thread.timestamp;
-    var draft = Drafts.byThreadId(thread.id);
+    var draft = this.draftCache.thread.get(thread.id);
     var firstThreadInContainer = false;
 
     if (draft) {
